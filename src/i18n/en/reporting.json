@@ -1,0 +1,59 @@
+{
+  "managementReporting": {
+    "title": "Management Reporting",
+    "wsr": "Weekly Status Report",
+    "msr": "Monthly Service Report",
+    "executive": "Executive Report",
+    "aiAnalytics": "AI Analytics",
+    "executiveSummary": "Executive Summary",
+    "operationalHealth": "Operational Health",
+    "technologyHealth": "Technology Health",
+    "workforce": "Workforce",
+    "incidents": "Incidents",
+    "risks": "Risks",
+    "vendor": "Vendor",
+    "finops": "FinOps",
+    "transformation": "Transformation",
+    "actions": "Actions",
+    "nextPeriod": "Next Period",
+    "generated": "Generated",
+    "period": "Period",
+    "status": "Status",
+    "owner": "Owner"
+  },
+  "serviceOps": {
+    "title": "Service Operations",
+    "serviceDeskOverview": "Service Desk Overview",
+    "criticalIncidents": "Critical Incidents",
+    "serviceRequests": "Service Requests",
+    "majorProblems": "Major Problems",
+    "changeRelease": "Change & Release Overview",
+    "operationalRCA": "Operational RCA",
+    "incidentId": "Incident ID",
+    "priority": "Priority",
+    "service": "Service",
+    "businessImpact": "Business Impact",
+    "currentStatus": "Current Status",
+    "owner": "Owner",
+    "elapsedTime": "Elapsed Time",
+    "relatedCI": "Related CI",
+    "relatedChange": "Related Change",
+    "rcaStatus": "RCA Status",
+    "totalIncidents": "Total Incidents",
+    "openIncidents": "Open Incidents",
+    "avgResponse": "Avg Response",
+    "avgResolution": "Avg Resolution",
+    "changeSuccessRate": "Change Success Rate",
+    "cabCompliance": "CAB Compliance",
+    "openProblems": "Open Problems",
+    "rcaPending": "RCA Pending"
+  },
+  "slaAssurance": {
+    "title": "SLA Assurance",
+    "pendingMessage": "Configuration pending business confirmation."
+  },
+  "otiCockpit": {
+    "title": "OTI Cockpit",
+    "pendingMessage": "Operational Trust Index framework pending business confirmation."
+  }
+}

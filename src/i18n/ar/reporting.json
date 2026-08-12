@@ -1,0 +1,59 @@
+{
+  "managementReporting": {
+    "title": "التقارير الإدارية",
+    "wsr": "التقرير الأسبوعي",
+    "msr": "تقرير الخدمة الشهري",
+    "executive": "التقرير التنفيذي",
+    "aiAnalytics": "تحليلات الذكاء الاصطناعي",
+    "executiveSummary": "الملخص التنفيذي",
+    "operationalHealth": "الصحة التشغيلية",
+    "technologyHealth": "صحة التكنولوجيا",
+    "workforce": "القوى العاملة",
+    "incidents": "الحوادث",
+    "risks": "المخاطر",
+    "vendor": "المورد",
+    "finops": "العمليات المالية",
+    "transformation": "التحول",
+    "actions": "الإجراءات",
+    "nextPeriod": "الفترة القادمة",
+    "generated": "تم الإنشاء",
+    "period": "الفترة",
+    "status": "الحالة",
+    "owner": "المالك"
+  },
+  "serviceOps": {
+    "title": "عمليات الخدمة",
+    "serviceDeskOverview": "نظرة عامة على مكتب الخدمة",
+    "criticalIncidents": "الحوادث الحرجة",
+    "serviceRequests": "طلبات الخدمة",
+    "majorProblems": "المشكلات الرئيسية",
+    "changeRelease": "نظرة عامة على التغييرات والإصدارات",
+    "operationalRCA": "تحليل السبب الجذري التشغيلي",
+    "incidentId": "معرف الحادث",
+    "priority": "الأولوية",
+    "service": "الخدمة",
+    "businessImpact": "التأثير التجاري",
+    "currentStatus": "الحالة الحالية",
+    "owner": "المالك",
+    "elapsedTime": "الوقت المنقضي",
+    "relatedCI": "عنصر التكوين المرتبط",
+    "relatedChange": "التغيير المرتبط",
+    "rcaStatus": "حالة تحليل السبب الجذري",
+    "totalIncidents": "إجمالي الحوادث",
+    "openIncidents": "الحوادث المفتوحة",
+    "avgResponse": "متوسط الاستجابة",
+    "avgResolution": "متوسط الحل",
+    "changeSuccessRate": "معدل نجاح التغيير",
+    "cabCompliance": "امتثال CAB",
+    "openProblems": "المشكلات المفتوحة",
+    "rcaPending": "تحليل السبب الجذري معلق"
+  },
+  "slaAssurance": {
+    "title": "ضمان اتفاقية مستوى الخدمة",
+    "pendingMessage": "التكوين في انتظار تأكيد الأعمال."
+  },
+  "otiCockpit": {
+    "title": "لوحة OTI",
+    "pendingMessage": "إطار مؤشر الثقة التشغيلية في انتظار تأكيد الأعمال."
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "knowledgeBase": {
+    "title": "Knowledge Base & Repository",
+    "categories": "Categories",
+    "sop": "SOP",
+    "runbook": "Runbook",
+    "howTo": "How-To",
+    "architecture": "Architecture",
+    "policy": "Policy",
+    "training": "Training",
+    "rca": "RCA",
+    "kedb": "KEDB",
+    "checklist": "Checklist",
+    "search": "Search knowledge base...",
+    "lastUpdated": "Last Updated",
+    "owner": "Owner",
+    "version": "Version",
+    "reviewDate": "Review Date",
+    "usage": "Usage"
+  },
+  "transformation": {
+    "title": "Digital Transformation & AI",
+    "automationInitiatives": "Automation Initiatives",
+    "aiInitiatives": "AI Initiatives",
+    "benefitsTracking": "Benefits Tracking",
+    "innovationPipeline": "Innovation Pipeline",
+    "initiative": "Initiative",
+    "owner": "Owner",
+    "tower": "Tower",
+    "status": "Status",
+    "plan": "Plan",
+    "actual": "Actual",
+    "benefit": "Benefit",
+    "effortSaved": "Effort Saved",
+    "timeline": "Timeline",
+    "risk": "Risk"
+  },
+  "finops": {
+    "title": "FinOps & Cloud Economics",
+    "spend": "Spend",
+    "budget": "Budget",
+    "forecast": "Forecast",
+    "variance": "Variance",
+    "optimization": "Optimization",
+    "utilization": "Utilization",
+    "idleResources": "Idle Resources",
+    "topCostDrivers": "Top Cost Drivers",
+    "monthly": "Monthly",
+    "trend": "Trend"
+  },
+  "workforce": {
+    "title": "Workforce Health",
+    "attendance": "Attendance",
+    "timesheetCompliance": "Timesheet Compliance",
+    "lateArrivals": "Late Arrivals",
+    "absence": "Absence",
+    "remote": "Remote",
+    "onSite": "On-Site",
+    "training": "Training",
+    "meetingLoad": "Meeting Load",
+    "trendByTower": "Trend by Tower"
+  }
+}

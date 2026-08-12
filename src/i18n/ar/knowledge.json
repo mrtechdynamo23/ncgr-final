@@ -1,0 +1,63 @@
+{
+  "knowledgeBase": {
+    "title": "قاعدة المعرفة والمستودع",
+    "categories": "الفئات",
+    "sop": "إجراءات التشغيل القياسية",
+    "runbook": "كتاب التشغيل",
+    "howTo": "كيفية",
+    "architecture": "البنية المعمارية",
+    "policy": "السياسة",
+    "training": "التدريب",
+    "rca": "تحليل السبب الجذري",
+    "kedb": "قاعدة بيانات الأخطاء المعروفة",
+    "checklist": "قائمة المراجعة",
+    "search": "البحث في قاعدة المعرفة...",
+    "lastUpdated": "آخر تحديث",
+    "owner": "المالك",
+    "version": "الإصدار",
+    "reviewDate": "تاريخ المراجعة",
+    "usage": "الاستخدام"
+  },
+  "transformation": {
+    "title": "التحول الرقمي والذكاء الاصطناعي",
+    "automationInitiatives": "مبادرات الأتمتة",
+    "aiInitiatives": "مبادرات الذكاء الاصطناعي",
+    "benefitsTracking": "تتبع الفوائد",
+    "innovationPipeline": "خط أنابيب الابتكار",
+    "initiative": "المبادرة",
+    "owner": "المالك",
+    "tower": "البرج",
+    "status": "الحالة",
+    "plan": "الخطة",
+    "actual": "الفعلي",
+    "benefit": "الفائدة",
+    "effortSaved": "الجهد الموفر",
+    "timeline": "الجدول الزمني",
+    "risk": "المخاطر"
+  },
+  "finops": {
+    "title": "العمليات المالية واقتصاديات السحابة",
+    "spend": "الإنفاق",
+    "budget": "الميزانية",
+    "forecast": "التوقعات",
+    "variance": "التباين",
+    "optimization": "التحسين",
+    "utilization": "الاستخدام",
+    "idleResources": "الموارد الخاملة",
+    "topCostDrivers": "أعلى محركات التكلفة",
+    "monthly": "شهري",
+    "trend": "الاتجاه"
+  },
+  "workforce": {
+    "title": "صحة القوى العاملة",
+    "attendance": "الحضور",
+    "timesheetCompliance": "امتثال الجدول الزمني",
+    "lateArrivals": "التأخيرات",
+    "absence": "الغياب",
+    "remote": "عن بُعد",
+    "onSite": "في الموقع",
+    "training": "التدريب",
+    "meetingLoad": "حمل الاجتماعات",
+    "trendByTower": "الاتجاه حسب البرج"
+  }
+}
