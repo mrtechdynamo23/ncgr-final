@@ -1,14 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import LoginPage from '../../pages/LoginPage';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
 import ChatAssistant from '../chat-assistant/ChatAssistant';
 import CommandPalette from '../command-palette/CommandPalette';
 
 const AppShell: React.FC = () => {
-  const { isAuthenticated } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -37,11 +34,6 @@ const AppShell: React.FC = () => {
   const openNotifications = useCallback(() => {
     setNotificationsOpen(true);
   }, []);
-
-  // ALL HOOKS ARE CALLED FIRST BEFORE ANY CONDITIONAL RETURN
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
 
   return (
     <div className="app-layout">

@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const from = (location.state as any)?.from?.pathname || '/';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,11 +20,13 @@ const LoginPage: React.FC = () => {
 
     setTimeout(() => {
       const success = login(password);
-      if (!success) {
+      if (success) {
+        navigate(from, { replace: true });
+      } else {
         setError('Invalid Security Access Code. Please enter the authorized NCGR password.');
         setIsLoading(false);
       }
-    }, 400);
+    }, 300);
   };
 
   return (

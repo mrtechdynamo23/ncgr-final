@@ -18,6 +18,9 @@ import MajorProblems from './pages/service-operations/MajorProblems';
 import OperationalRCA from './pages/service-operations/OperationalRCA';
 import ServiceDeskOverview from './pages/service-operations/ServiceDeskOverview';
 
+import { RequireAuth } from './components/auth/RequireAuth';
+import LoginPage from './pages/LoginPage';
+
 import ApplicationServicesLanding from './pages/applications/ApplicationServicesLanding';
 import ApplicationHealthPage from './pages/applications/ApplicationHealthPage';
 import BusinessServiceHealthPage from './pages/applications/BusinessServiceHealthPage';
@@ -58,8 +61,16 @@ import AIAnalyticsView from './pages/reporting/AIAnalyticsView';
 
 const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <RequireAuth>
+        <AppShell />
+      </RequireAuth>
+    ),
     children: [
       // ─── COMMAND CENTRE HOMEPAGE ─────────────────────────
       {
