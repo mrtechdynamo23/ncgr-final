@@ -354,7 +354,9 @@ const router = createBrowserRouter([
       },
     ],
   },
-]);
+], {
+  basename: import.meta.env.BASE_URL,
+});
 
 const AppRouter: React.FC = () => {
   return <RouterProvider router={router} />;
