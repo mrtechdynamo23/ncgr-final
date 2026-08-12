@@ -14,10 +14,6 @@ const AppShell: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [, setNotificationsOpen] = useState(false);
 
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
   }, []);
@@ -42,6 +38,11 @@ const AppShell: React.FC = () => {
     setNotificationsOpen(true);
   }, []);
 
+  // ALL HOOKS ARE CALLED FIRST BEFORE ANY CONDITIONAL RETURN
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -65,7 +66,10 @@ const AppShell: React.FC = () => {
 
       {/* Global Intelligence Floating Widgets */}
       <ChatAssistant />
-      <CommandPalette isOpen={commandPaletteOpen} onClose={closeCommandPalette} />
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={closeCommandPalette}
+      />
     </div>
   );
 };
