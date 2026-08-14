@@ -1,13 +1,17 @@
 import React from 'react';
+import { RouterProvider } from 'react-router-dom';
 import { ThemeProvider } from './providers/ThemeProvider';
 import { AuthProvider } from './context/AuthContext';
-import AppRouter from './router';
+import { DataStoreProvider } from './data/mockDataStore';
+import { router } from './router';
 
 const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppRouter />
+        <DataStoreProvider>
+          <RouterProvider router={router} />
+        </DataStoreProvider>
       </AuthProvider>
     </ThemeProvider>
   );

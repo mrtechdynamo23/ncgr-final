@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
+import NotificationDrawer from './NotificationDrawer';
 import ChatAssistant from '../chat-assistant/ChatAssistant';
 import CommandPalette from '../command-palette/CommandPalette';
 
@@ -9,7 +10,7 @@ const AppShell: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [, setNotificationsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
@@ -35,6 +36,10 @@ const AppShell: React.FC = () => {
     setNotificationsOpen(true);
   }, []);
 
+  const closeNotifications = useCallback(() => {
+    setNotificationsOpen(false);
+  }, []);
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -56,7 +61,11 @@ const AppShell: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Intelligence Floating Widgets */}
+      {/* Global Intelligence Floating Widgets & Drawers */}
+      <NotificationDrawer
+        isOpen={notificationsOpen}
+        onClose={closeNotifications}
+      />
       <ChatAssistant />
       <CommandPalette
         isOpen={commandPaletteOpen}

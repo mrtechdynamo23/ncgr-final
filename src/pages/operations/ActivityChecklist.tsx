@@ -1,143 +1,200 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { activityChecklistItems } from '../../data/master-employees';
-import { Search } from 'lucide-react';
+import React from 'react';
+import { useDataStore } from '../../data/mockDataStore';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import type { ActivityItem } from '../../data/master-employees';
+import { CheckSquare, Square } from 'lucide-react';
 
 const ActivityChecklist: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const { activityItems, toggleActivityItem } = useDataStore();
 
-  const filteredItems = activityChecklistItems.filter((item) => {
-    const matchesSearch = item.activity.toLowerCase().includes(searchTerm.toLowerCase()) || item.owner.toLowerCase().includes(searchTerm.toLowerCase()) || item.tower.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || item.status.toLowerCase() === statusFilter.toLowerCase();
-    return matchesSearch && matchesStatus;
-  });
+  const completedCount = activityItems.filter(i => i.status === 'Completed').length;
+  const inProgressCount = activityItems.filter(i => i.status === 'In Progress').length;
+  const pendingCount = activityItems.filter(i => i.status === 'Pending').length;
+  const overdueCount = activityItems.filter(i => i.status === 'Overdue').length;
+  const completionPct = ((completedCount / activityItems.length) * 100).toFixed(1);
 
-  const completedCount = activityChecklistItems.filter(i => i.status === 'Completed').length;
-  const pendingCount = activityChecklistItems.filter(i => i.status === 'Pending').length;
-  const overdueCount = activityChecklistItems.filter(i => i.status === 'Overdue').length;
-  const completionPct = ((completedCount / activityChecklistItems.length) * 100).toFixed(1);
+  const columns: ColumnDef<ActivityItem>[] = [
+    {
+      header: 'Done',
+      width: '60px',
+      sortable: false,
+      cell: (row) => (
+        <button
+          onClick={() => toggleActivityItem(row.id)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: row.status === 'Completed' ? '#22A06B' : 'var(--text-tertiary, #98A2B3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 4,
+          }}
+          title={row.status === 'Completed' ? 'Mark Incomplete' : 'Mark Completed'}
+        >
+          {row.status === 'Completed' ? <CheckSquare size={18} /> : <Square size={18} />}
+        </button>
+      ),
+    },
+    {
+      header: 'Task ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Activity Description',
+      accessorKey: 'activity',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)', textDecoration: row.status === 'Completed' ? 'line-through' : 'none' }}>
+            {row.activity}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>{row.remarks}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Tower',
+      accessorKey: 'tower',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: 'var(--bg-secondary, #F7F8FA)',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            border: '1px solid var(--border, #E4E7EC)',
+          }}
+        >
+          {row.tower}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Owner',
+      accessorKey: 'owner',
+      cell: (row) => <span style={{ fontWeight: 600 }}>{row.owner}</span>,
+    },
+    {
+      header: 'Frequency',
+      accessorKey: 'frequency',
+    },
+    {
+      header: 'Due Time',
+      accessorKey: 'dueTime',
+      cell: (row) => (
+        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--ncgr-deep-blue, #074A76)' }}>
+          {row.dueTime}
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (row) => {
+        const bg = row.status === 'Completed' ? '#E3FCEF' : row.status === 'In Progress' ? '#E6F4FC' : row.status === 'Pending' ? '#FFF7E6' : '#FFEBE6';
+        const color = row.status === 'Completed' ? '#22A06B' : row.status === 'In Progress' ? '#4AA6DC' : row.status === 'Pending' ? '#E97F0A' : '#DE350B';
+        return (
+          <span
+            className="status-badge"
+            style={{
+              background: bg,
+              color: color,
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Last Run',
+      accessorKey: 'lastCompleted',
+      cell: (row) => (
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>
+          {row.lastCompleted}
+        </span>
+      ),
+    },
+  ];
+
+  const uniqueTowers = Array.from(new Set(activityItems.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueFreqs = Array.from(new Set(activityItems.map(e => e.frequency))).map(f => ({ label: f, value: f }));
+
+  const filters: FilterDef<ActivityItem>[] = [
+    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    { key: 'frequency', label: 'Frequencies', options: uniqueFreqs },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'Completed', value: 'Completed' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Pending', value: 'Pending' },
+        { label: 'Overdue', value: 'Overdue' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Operational Activity Checklist</h1>
-            <p className="page-subtitle">Daily & Weekly Operational Tasks, Health Checks & Shift Verification</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Activity Checklist & Shift Verification
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          Daily & weekly mandatory operational checklists across infrastructure, database, cloud, and security towers
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Checklist Completion</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#40904F', marginTop: 4 }}>{completionPct}%</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>{completedCount} of {activityItems.length} checked</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>In Progress / Pending</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4AA6DC', marginTop: 4 }}>{inProgressCount + pendingCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Due within shift</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Overdue Tasks</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{overdueCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Action required</div>
         </div>
       </div>
 
-      {/* Summary KPI Cards (Section 5) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Total Scheduled Activities</div>
-          <div className="kpi-card-value">{activityChecklistItems.length}</div>
-          <div className="kpi-card-trend neutral">Daily & Weekly Checklists</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">Completed Tasks</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>{completedCount}</div>
-          <div className="kpi-card-trend up">On Schedule</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">Pending Verification</div>
-          <div className="kpi-card-value" style={{ color: '#4AA6DC' }}>{pendingCount}</div>
-          <div className="kpi-card-trend neutral">Due Today</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">Overdue Tasks</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>{overdueCount}</div>
-          <div className="kpi-card-trend down">Requires Action</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#1FBBB0' }} />
-          <div className="kpi-card-label">Completion Rate</div>
-          <div className="kpi-card-value" style={{ color: '#1FBBB0' }}>{completionPct}%</div>
-          <div className="kpi-card-trend up">Operational SLA Target 95%</div>
-        </div>
-      </div>
-
-      {/* Filter & Search Controls */}
-      <div className="card" style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 12, flex: 1, minWidth: 280 }}>
-            <div className="header-search" style={{ width: '100%', maxWidth: 360 }}>
-              <Search size={16} className="header-search-icon" />
-              <input
-                type="text"
-                placeholder="Search activity, owner, tower..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="form-select"
-              style={{ width: 160, padding: '8px 12px', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)' }}
-            >
-              <option value="all">All Statuses</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="overdue">Overdue</option>
-            </select>
-          </div>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>Showing {filteredItems.length} of {activityChecklistItems.length} activities</span>
-        </div>
-      </div>
-
-      {/* Detail Data Table */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Activity Execution Log</h2>
-        </div>
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Activity Description</th>
-                <th>Tower</th>
-                <th>Owner</th>
-                <th>Frequency</th>
-                <th>Due Time</th>
-                <th>Status</th>
-                <th>Last Completed</th>
-                <th>Next Due</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.map((item) => (
-                <tr key={item.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{item.id}</td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{item.activity}</td>
-                  <td><span className="health-badge healthy" style={{ fontSize: '0.625rem' }}>{item.tower}</span></td>
-                  <td style={{ fontSize: '0.75rem' }}>{item.owner}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{item.frequency}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.dueTime}</td>
-                  <td>
-                    <span className={`health-badge ${item.status === 'Completed' ? 'healthy' : item.status === 'Pending' ? 'at-risk' : 'critical'}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.lastCompleted}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{item.nextDue}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{item.remarks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={activityItems}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search by activity, task ID, owner, or tower..."
+        searchKeys={['activity', 'id', 'owner', 'tower', 'remarks']}
+        pageSize={15}
+        title="Active Operational Verification Roster"
+        subtitle="Click the checkbox icon to toggle completed/incomplete status in real-time"
+        exportFilename="ncgr_activity_checklist"
+      />
     </div>
   );
 };

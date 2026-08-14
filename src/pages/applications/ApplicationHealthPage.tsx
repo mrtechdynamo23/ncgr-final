@@ -1,195 +1,217 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { masterApplications } from '../../data/master-applications';
+import { masterApplications, type ApplicationRecord } from '../../data/master-applications';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
-import { Search } from 'lucide-react';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 
 const ApplicationHealthPage: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [healthFilter, setHealthFilter] = useState('all');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
-  const filteredApps = masterApplications.filter(a => {
-    const matchesSearch = a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.businessService.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      a.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesHealth = healthFilter === 'all' || a.health.toLowerCase() === healthFilter.toLowerCase();
-    return matchesSearch && matchesHealth;
-  });
+  const healthyCount = masterApplications.filter(a => a.health === 'Healthy').length;
+  const degradedCount = masterApplications.filter(a => a.health === 'Degraded').length;
+  const criticalCount = masterApplications.filter(a => a.health === 'Critical').length;
+  const tier1Count = masterApplications.filter(a => a.criticality === 'Critical').length;
+
+  const columns: ColumnDef<ApplicationRecord>[] = [
+    {
+      header: 'App ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Application Name & Stack',
+      accessorKey: 'name',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.name}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>
+            Stack: {row.technologyStack} • Host: {row.hosting}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Criticality',
+      accessorKey: 'criticality',
+      width: '100px',
+      cell: (row) => {
+        const isCritical = row.criticality === 'Critical';
+        return (
+          <span
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontWeight: 700,
+              fontSize: '0.6875rem',
+              background: isCritical ? '#FFEBE6' : '#E6F4FC',
+              color: isCritical ? '#DE350B' : '#074A76',
+            }}
+          >
+            {row.criticality}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Business Service',
+      accessorKey: 'businessService',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{row.businessService}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>Domain: {row.businessDomain}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Availability',
+      accessorKey: 'availability',
+      cell: (row) => (
+        <div style={{ minWidth: 90 }}>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 800, color: row.availabilityVal >= 99.9 ? '#22A06B' : row.availabilityVal >= 99.0 ? '#E97F0A' : '#DE350B', marginBottom: 2 }}>
+            {row.availability}
+          </div>
+          <div style={{ height: 4, width: '100%', background: 'var(--bg-secondary, #F7F8FA)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${Math.min(100, row.availabilityVal)}%`, background: row.availabilityVal >= 99.9 ? '#40904F' : '#E97F0A' }} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Active Incidents',
+      accessorKey: 'activeIncidentsCount',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: row.activeIncidentsCount > 0 ? '#DE350B' : '#22A06B', fontSize: '0.8125rem' }}>
+          {row.activeIncidentsCount} Incidents
+        </span>
+      ),
+    },
+    {
+      header: 'IT Owner Lead',
+      accessorKey: 'itOwner',
+      cell: (row) => <span style={{ fontWeight: 600 }}>{row.itOwner}</span>,
+    },
+    {
+      header: 'Health',
+      accessorKey: 'health',
+      cell: (row) => {
+        const bg = row.health === 'Healthy' ? '#E3FCEF' : row.health === 'Degraded' ? '#FFF7E6' : '#FFEBE6';
+        const color = row.health === 'Healthy' ? '#22A06B' : row.health === 'Degraded' ? '#E97F0A' : '#DE350B';
+        return (
+          <span
+            style={{
+              padding: '3px 10px',
+              borderRadius: 12,
+              background: bg,
+              color: color,
+              fontWeight: 700,
+              fontSize: '0.75rem',
+            }}
+          >
+            {row.health}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const uniqueDomains = Array.from(new Set(masterApplications.map(a => a.businessDomain))).map(d => ({ label: d, value: d }));
+  const uniqueHosting = Array.from(new Set(masterApplications.map(a => a.hosting))).map(h => ({ label: h, value: h }));
+
+  const filters: FilterDef<ApplicationRecord>[] = [
+    {
+      key: 'health',
+      label: 'Health',
+      options: [
+        { label: 'Healthy', value: 'Healthy' },
+        { label: 'Degraded', value: 'Degraded' },
+        { label: 'Critical', value: 'Critical' },
+      ],
+    },
+    {
+      key: 'criticality',
+      label: 'Criticality',
+      options: [
+        { label: 'Critical', value: 'Critical' },
+        { label: 'High', value: 'High' },
+        { label: 'Medium', value: 'Medium' },
+        { label: 'Low', value: 'Low' },
+      ],
+    },
+    { key: 'businessDomain', label: 'Business Domains', options: uniqueDomains },
+    { key: 'hosting', label: 'Hosting', options: uniqueHosting },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Application Technical & Operational Health</h1>
-            <p className="page-subtitle">Real-Time Technical Health, 30-Day Availability Telemetry & Active Incident Impact</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Application Services & Health Portfolio
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          Central portfolio of 48 managed applications: real-time availability, incident telemetry, release status, and technical owners
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Portfolio Scale</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{masterApplications.length} Apps</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>{tier1Count} Mission Critical</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Healthy Applications</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{healthyCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Optimal availability</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E97F0A', textTransform: 'uppercase' }}>Degraded / Performance</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#E97F0A', marginTop: 4 }}>{degradedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#E97F0A', marginTop: 2, fontWeight: 600 }}>Gateway / pool alert</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>Critical Impact</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{criticalCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Active bridge triage</div>
         </div>
       </div>
 
-      {/* KPI Overview (Module 1 Spec) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Total Applications</div>
-          <div className="kpi-card-value">48</div>
-          <div className="kpi-card-trend neutral">Monitored Portfolio</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">Healthy (GREEN)</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>39</div>
-          <div className="kpi-card-trend up">Normal Operating Parameters</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">Degraded (AMBER)</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>6</div>
-          <div className="kpi-card-trend down">Performance / Gateway Alerts</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">Critical (RED)</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>3</div>
-          <div className="kpi-card-trend down">Requires Active Workaround</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#1FBBB0' }} />
-          <div className="kpi-card-label">Overall Availability</div>
-          <div className="kpi-card-value" style={{ color: '#1FBBB0' }}>99.82%</div>
-          <div className="kpi-card-trend up">Target 99.50%</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#671E75' }} />
-          <div className="kpi-card-label">Active P1/P2 Incidents</div>
-          <div className="kpi-card-value" style={{ color: '#671E75' }}>2</div>
-          <div className="kpi-card-trend neutral">5 Perf Alerts Active</div>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={masterApplications}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search apps by name, stack, service, owner, ID..."
+        searchKeys={['name', 'technologyStack', 'businessService', 'businessDomain', 'itOwner', 'hosting', 'id']}
+        pageSize={15}
+        onRowClick={(row) => setSelectedAppId(row.id)}
+        title="Enterprise Application Portfolio & Health Registry"
+        subtitle="Click any application to open the complete architecture & operational detail modal"
+        exportFilename="ncgr_application_portfolio"
+      />
 
-      {/* Visualizations Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-        <div className="card" style={{ padding: 20 }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 12 }}>Applications Requiring Attention (Degraded / Critical)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {masterApplications.filter(a => a.health !== 'Healthy').slice(0, 4).map(a => (
-              <div
-                key={a.id}
-                onClick={() => setSelectedAppId(a.id)}
-                style={{ padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 6, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-              >
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{a.name} ({a.id})</div>
-                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-secondary)' }}>Service: {a.businessService} · Response: {a.responseTimeSec}s</div>
-                </div>
-                <span className={`health-badge ${a.health === 'Critical' ? 'critical' : 'at-risk'}`}>{a.health}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card" style={{ padding: 20 }}>
-          <h3 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: 12 }}>30-Day Availability & Performance Trend</h3>
-          <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span>Critical Applications SLA Met:</span>
-              <strong style={{ color: 'var(--status-healthy)' }}>100%</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span>Avg APM Latency Across 48 Apps:</span>
-              <strong>1.42 sec</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span>Total Transactions Monitored:</span>
-              <strong>48,200 ops/hr</strong>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-              <span>APM Alert Threshold Breaches:</span>
-              <strong style={{ color: '#E97F0A' }}>5 Applications</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Application Table */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Application Health Portfolio (Click any row for dossier)</h2>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div className="header-search" style={{ width: 260 }}>
-              <Search size={16} className="header-search-icon" />
-              <input
-                type="text"
-                placeholder="Search application or service..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select
-              value={healthFilter}
-              onChange={(e) => setHealthFilter(e.target.value)}
-              style={{ width: 140, padding: '6px 10px', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)' }}
-            >
-              <option value="all">All Health</option>
-              <option value="healthy">Healthy</option>
-              <option value="degraded">Degraded</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>App ID</th>
-                <th>Application Name</th>
-                <th>Business Service</th>
-                <th>Criticality</th>
-                <th>Environment</th>
-                <th>Availability</th>
-                <th>Performance</th>
-                <th>Active Incidents</th>
-                <th>Health Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApps.map((a) => (
-                <tr key={a.id} onClick={() => setSelectedAppId(a.id)} style={{ cursor: 'pointer' }}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{a.id}</td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--ncgr-deep-blue)' }}>{a.name}</td>
-                  <td style={{ fontSize: '0.8125rem' }}>{a.businessService}</td>
-                  <td>
-                    <span className={`health-badge ${a.criticality === 'Critical' ? 'critical' : a.criticality === 'High' ? 'at-risk' : 'healthy'}`}>
-                      {a.criticality}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem' }}>{a.environment}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--status-healthy)', fontWeight: 600 }}>{a.availability}</td>
-                  <td>
-                    <span className={`health-badge ${a.performanceState === 'Normal' ? 'healthy' : 'at-risk'}`}>
-                      {a.performanceState}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem', fontWeight: 600, color: a.activeIncidentsCount > 0 ? 'var(--status-critical)' : 'inherit' }}>
-                    {a.activeIncidentsCount}
-                  </td>
-                  <td>
-                    <span className={`health-badge ${a.health === 'Healthy' ? 'healthy' : a.health === 'Degraded' ? 'at-risk' : 'critical'}`}>
-                      {a.health}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <ApplicationDetailModal appId={selectedAppId} onClose={() => setSelectedAppId(null)} />
+      {/* Application Detail Modal */}
+      {selectedAppId && (
+        <ApplicationDetailModal
+          appId={selectedAppId}
+          onClose={() => setSelectedAppId(null)}
+        />
+      )}
     </div>
   );
 };

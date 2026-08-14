@@ -1,139 +1,311 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
-
-interface IncidentItem {
-  id: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4';
-  service: string;
-  category: string;
-  description: string;
-  startTime: string;
-  duration: string;
-  status: 'Investigating' | 'Monitoring' | 'Resolved' | 'Closed';
-  owner: string;
-  impact: string;
-  currentAction: string;
-}
-
-const incidentsList: IncidentItem[] = [
-  { id: 'INC-26081', priority: 'P1', service: 'NCGR Digital Services', category: 'Application Slowness', description: 'Intermittent application connectivity and WebLogic pool exhaustion', startTime: '2026-08-12 01:36', duration: '24m', status: 'Resolved', owner: 'Application Support (Sara Al-Otaibi)', impact: 'High (8,450 users)', currentAction: 'Connection pool expanded; monitoring steady' },
-  { id: 'INC-26082', priority: 'P2', service: 'Enterprise Network', category: 'WAN Latency', description: 'STC primary WAN link packet drops during peak hours', startTime: '2026-08-12 09:10', duration: '2h 15m', status: 'Monitoring', owner: 'Network Ops (Mohammed Al-Dosari)', impact: 'Medium (Riyadh-Jeddah link)', currentAction: 'Traffic rerouted to standby fiber' },
-  { id: 'INC-26083', priority: 'P2', service: 'Database Platform', category: 'Replication Delay', description: 'Oracle RAC secondary node redo log transport lag', startTime: '2026-08-11 22:45', duration: '45m', status: 'Resolved', owner: 'Database Ops (Omar Al-Mutairi)', impact: 'Medium (DR Replica)', currentAction: 'Redo log apply caught up' },
-  { id: 'INC-26084', priority: 'P3', service: 'ServiceNow Platform', category: 'Integration Timeout', description: 'CMDB automated discovery API rate limit timeout', startTime: '2026-08-11 15:00', duration: '1h 10m', status: 'Resolved', owner: 'Automation & AI (Arjun Menon)', impact: 'Low (CI sync delayed)', currentAction: 'Batch pagination deployed' },
-  { id: 'INC-26085', priority: 'P3', service: 'Cloud Platforms', category: 'Storage Egress Latency', description: 'GCP Cloud Storage PDF export egress delay', startTime: '2026-08-10 11:20', duration: '35m', status: 'Resolved', owner: 'Cloud Ops (Priya Nair)', impact: 'Low (Report exports)', currentAction: 'Bucket dual-region sync verified' },
-  { id: 'INC-26086', priority: 'P3', service: 'Security Platform', category: 'PAM Policy Sync', description: 'BeyondTrust PAM policy update GPO push failure', startTime: '2026-08-09 18:30', duration: '50m', status: 'Resolved', owner: 'Security Ops (Daniel Mathew)', impact: 'Low (14 Admin tokens)', currentAction: 'GPO forced update executed' },
-  { id: 'INC-26087', priority: 'P4', service: 'Digital Workplace', category: 'Teams Audio Quality', description: 'Intermittent Teams voice jitter on VPN users', startTime: '2026-08-08 14:00', duration: '2h 00m', status: 'Resolved', owner: 'Digital Workplace (Layla Hassan)', impact: 'Low (Remote staff)', currentAction: 'Split tunneling enabled' },
-  { id: 'INC-26088', priority: 'P3', service: 'Infrastructure Platform', category: 'Memory Threshold', description: 'Monitoring Host ESX-02 memory utilization at 83%', startTime: '2026-08-08 08:15', duration: '3h 30m', status: 'Monitoring', owner: 'Infrastructure (Ahmed Al-Qahtani)', impact: 'Low (Log ingestion)', currentAction: 'Worker VMs rebalancing planned' },
-  { id: 'INC-26089', priority: 'P4', service: 'Reporting Platform', category: 'PowerBI Refresh Timeout', description: 'PowerBI weekly status dataset refresh failure', startTime: '2026-08-07 10:00', duration: '40m', status: 'Resolved', owner: 'Program Mgmt (Vivek Srinivasan)', impact: 'Low (Executive view)', currentAction: 'Audit log index added' },
-  { id: 'INC-26090', priority: 'P3', service: 'Identity Services', category: 'SAML Cert Warning', description: 'ADFS token signing cert expiry 14-day threshold alert', startTime: '2026-08-06 09:00', duration: '15m', status: 'Resolved', owner: 'Security Ops (Daniel Mathew)', impact: 'Low (Pre-emptive)', currentAction: 'Cert auto-enrollment renewed' },
-];
+import { useDataStore } from '../../data/mockDataStore';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import type { Incident } from '../../data/incidents';
+import { X } from 'lucide-react';
 
 const CriticalIncidents: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
+  const { incidents } = useDataStore();
+  const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
 
-  const filteredIncidents = incidentsList.filter(i =>
-    i.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    i.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    i.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    i.owner.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const criticalList = incidents.filter(i => i.priority === 'P1' || i.priority === 'P2');
+  const p1Active = criticalList.filter(i => i.priority === 'P1' && (i.status === 'Open' || i.status === 'In Progress')).length;
+  const p2Active = criticalList.filter(i => i.priority === 'P2' && (i.status === 'Open' || i.status === 'In Progress')).length;
+  const resolvedCount = criticalList.filter(i => i.status === 'Resolved' || i.status === 'Closed').length;
+
+  const columns: ColumnDef<Incident>[] = [
+    {
+      header: 'Incident ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Severity',
+      accessorKey: 'priority',
+      width: '80px',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '3px 8px',
+            borderRadius: 4,
+            background: row.priority === 'P1' ? '#FFEBE6' : '#FFF7E6',
+            color: row.priority === 'P1' ? '#DE350B' : '#E97F0A',
+            fontWeight: 800,
+            fontSize: '0.6875rem',
+          }}
+        >
+          {row.priority} {row.priority === 'P1' ? 'CRITICAL' : 'MAJOR'}
+        </span>
+      ),
+    },
+    {
+      header: 'Incident Title & Impact',
+      accessorKey: 'title',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.title}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', fontWeight: 600 }}>{row.businessImpact}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Tower',
+      accessorKey: 'tower',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: 'var(--bg-secondary, #F7F8FA)',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            border: '1px solid var(--border, #E4E7EC)',
+          }}
+        >
+          {row.tower}
+        </span>
+      ),
+    },
+    {
+      header: 'Incident Commander',
+      accessorKey: 'assignedEngineer',
+      cell: (row) => <span style={{ fontWeight: 600 }}>{row.assignedEngineer}</span>,
+    },
+    {
+      header: 'Duration',
+      accessorKey: 'duration',
+      cell: (row) => (
+        <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--ncgr-deep-blue, #074A76)' }}>
+          {row.duration}
+        </span>
+      ),
+    },
+    {
+      header: 'RCA Status',
+      accessorKey: 'rcaStatus',
+      cell: (row) => (
+        <span
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            color: row.rcaStatus === 'Completed' ? '#22A06B' : '#E97F0A',
+          }}
+        >
+          {row.rcaStatus || 'Pending'}
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (row) => {
+        const bg = row.status === 'Resolved' || row.status === 'Closed' ? '#E3FCEF' : row.status === 'In Progress' ? '#FFEBE6' : '#FFF7E6';
+        const color = row.status === 'Resolved' || row.status === 'Closed' ? '#22A06B' : row.status === 'In Progress' ? '#DE350B' : '#E97F0A';
+        return (
+          <span
+            className="status-badge"
+            style={{
+              background: bg,
+              color: color,
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const uniqueTowers = Array.from(new Set(criticalList.map(e => e.tower))).map(t => ({ label: t, value: t }));
+
+  const filters: FilterDef<Incident>[] = [
+    {
+      key: 'priority',
+      label: 'Severity',
+      options: [
+        { label: 'P1 Critical', value: 'P1' },
+        { label: 'P2 Major', value: 'P2' },
+      ],
+    },
+    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Open', value: 'Open' },
+        { label: 'Resolved', value: 'Resolved' },
+        { label: 'Closed', value: 'Closed' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Critical Incidents Operations View</h1>
-            <p className="page-subtitle">Real-Time Incident Triage, P1/P2 Operational Bridge & MTTR Analytics</p>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Critical Incidents (P1 / P2 Operations Bridge)
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          High-severity outage management, incident bridge commanders, business impact mitigation, and RCA governance
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', borderTop: '3px solid #DE350B' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>Active P1 Outages</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{p1Active}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Bridge Active</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', borderTop: '3px solid #E97F0A' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E97F0A', textTransform: 'uppercase' }}>Active P2 Major</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#E97F0A', marginTop: 4 }}>{p2Active}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>In remediation</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', borderTop: '3px solid #22A06B' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Closed / Resolved</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{resolvedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>RCA in progress</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', borderTop: '3px solid #074A76' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ncgr-deep-blue, #074A76)', textTransform: 'uppercase' }}>Historical Criticals</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{criticalList.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Total logged P1/P2</div>
+        </div>
+      </div>
+
+      {/* Main DataTable */}
+      <DataTable
+        data={criticalList}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search critical incidents by ID, title, CI, commander..."
+        searchKeys={['id', 'title', 'description', 'assignedEngineer', 'relatedCI', 'businessImpact', 'tower']}
+        pageSize={12}
+        onRowClick={(row) => setSelectedIncident(row)}
+        title="Critical Incident Response Log"
+        subtitle="Click any row to open the full technical bridge & remediation brief"
+        exportFilename="ncgr_critical_incidents"
+      />
+
+      {/* Incident Detail Drawer */}
+      {selectedIncident && (
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(10, 22, 40, 0.45)',
+              backdropFilter: 'blur(3px)',
+              zIndex: 1000,
+            }}
+            onClick={() => setSelectedIncident(null)}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 500,
+              maxWidth: '90vw',
+              background: 'var(--surface-raised, #FFFFFF)',
+              boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.15)',
+              zIndex: 1001,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 24,
+              overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    background: selectedIncident.priority === 'P1' ? '#FFEBE6' : '#FFF7E6',
+                    color: selectedIncident.priority === 'P1' ? '#DE350B' : '#E97F0A',
+                  }}
+                >
+                  {selectedIncident.priority} CRITICAL
+                </span>
+                <span style={{ fontSize: '0.8125rem', fontFamily: 'monospace', fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)' }}>
+                  {selectedIncident.id}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedIncident(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={20} color="var(--text-tertiary, #98A2B3)" />
+              </button>
+            </div>
+
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.125rem', fontWeight: 800, color: 'var(--text, #101828)' }}>
+              {selectedIncident.title}
+            </h3>
+
+            <p style={{ margin: '0 0 20px', fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', lineHeight: 1.5 }}>
+              {selectedIncident.description}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+              <div style={{ padding: 12, borderRadius: 8, background: '#FFEBE6', border: '1px solid rgba(222,53,11,0.2)' }}>
+                <strong style={{ fontSize: '0.75rem', color: '#DE350B', textTransform: 'uppercase' }}>Business Impact Statement</strong>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#DE350B', marginTop: 2 }}>{selectedIncident.businessImpact}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Incident Commander & Tower</strong>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text, #101828)', marginTop: 2 }}>
+                  {selectedIncident.assignedEngineer} • {selectedIncident.tower} ({selectedIncident.assignmentGroup})
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Affected Service & CI</strong>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text, #101828)', marginTop: 2 }}>
+                  {selectedIncident.service} • CI: {selectedIncident.relatedCI}
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Duration & Timestamps</strong>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary, #475467)', marginTop: 2 }}>
+                  Opened: {selectedIncident.createdDate} • Outage Elapsed: <strong>{selectedIncident.duration}</strong>
+                </div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>RCA Governance State</strong>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#40904F', marginTop: 2 }}>
+                  {selectedIncident.rcaStatus || 'In Progress'} — Target: 5 business days from resolution
+                </div>
+              </div>
+            </div>
           </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
-        </div>
-      </div>
-
-      {/* KPI Cards (Section 6) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">P1 Active / Today</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>0 / 1</div>
-          <div className="kpi-card-trend up">MTTR 24m (Target &lt; 30m)</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">P2 Active Incidents</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>1</div>
-          <div className="kpi-card-trend neutral">INC-26082 (WAN Latency)</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">P3 / P4 Incidents</div>
-          <div className="kpi-card-value">1</div>
-          <div className="kpi-card-trend neutral">Under Investigation</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">Resolved Today</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>8</div>
-          <div className="kpi-card-trend up">SLA Met 98.4%</div>
-        </div>
-      </div>
-
-      {/* Incidents Table */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Recent Operational Incidents (10 Records)</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search incidents..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Incident ID</th>
-                <th>Priority</th>
-                <th>Service</th>
-                <th style={{ minWidth: 220 }}>Description</th>
-                <th>Start Time</th>
-                <th>Duration</th>
-                <th>Owner</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredIncidents.map((i) => (
-                <tr key={i.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{i.id}</td>
-                  <td>
-                    <span className={`health-badge ${i.priority === 'P1' ? 'critical' : i.priority === 'P2' ? 'at-risk' : 'healthy'}`}>
-                      {i.priority}
-                    </span>
-                  </td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{i.service}</td>
-                  <td style={{ fontSize: '0.8125rem' }}>{i.description}<br /><span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Action: {i.currentAction}</span></td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{i.startTime}</td>
-                  <td style={{ fontSize: '0.75rem', fontWeight: 600 }}>{i.duration}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{i.owner}</td>
-                  <td>
-                    <span className={`health-badge ${i.status === 'Resolved' ? 'healthy' : i.status === 'Monitoring' ? 'info' : 'at-risk'}`}>
-                      {i.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

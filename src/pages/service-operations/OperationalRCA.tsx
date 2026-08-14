@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import { X } from 'lucide-react';
 
 interface RCARecord {
   id: string;
   incidentRef: string;
   service: string;
+  tower: string;
   date: string;
   businessImpact: string;
   technicalCause: string;
@@ -18,139 +19,279 @@ interface RCARecord {
 }
 
 const rcaList: RCARecord[] = [
-  { id: 'RCA-026', incidentRef: 'INC-26081', service: 'NCGR Digital Services', date: '2026-08-12', businessImpact: 'Intermittent portal slowness affecting 8,450 active users for 24 minutes', technicalCause: 'Connection pool exhaustion following abnormal 300% traffic burst', contributingFactors: 'Stale database connections not released by WebLogic thread pool', rootCause: 'Application connection pool configuration limit set below burst threshold with auto-reconnect disabled.', correctiveAction: 'Adjusted WebLogic pool size from 100 to 300 connections and restarted app cluster.', preventiveAction: 'Implemented Splunk automated pool capacity alerts and auto-scaling rules.', owner: 'Sara Al-Otaibi', status: 'Approved' },
-  { id: 'RCA-025', incidentRef: 'INC-25940', service: 'Enterprise Network', date: '2026-08-05', businessImpact: 'High WAN latency between Riyadh Primary and DR site for 42 minutes', technicalCause: 'BGP path flapping on STC secondary fiber link', contributingFactors: 'Intermittent optical transceiver degradation on carrier edge router', rootCause: 'Physical fiber interface packet loss triggered automated BGP route recalculation loop.', correctiveAction: 'Switched primary transport path to standby STC dark fiber link.', preventiveAction: 'Replaced SFP+ optical module and enabled STC SLA link monitoring probe.', owner: 'Mohammed Al-Dosari', status: 'Closed' },
-  { id: 'RCA-024', incidentRef: 'INC-25810', service: 'Database Platform', date: '2026-07-28', businessImpact: 'Delayed reporting generation for 12 executive users for 1 hour', technicalCause: 'Oracle RAC node 2 redo log sync delay during batch run', contributingFactors: 'Concurrent backup job overlapped with daily SAP batch query', rootCause: 'Unsynchronized job schedule caused disk I/O contention on SAN storage pool.', correctiveAction: 'Shifted backup window to 02:00 AM off-peak.', preventiveAction: 'Configured I/O priority rules on SAN controller.', owner: 'Omar Al-Mutairi', status: 'Closed' },
-  { id: 'RCA-023', incidentRef: 'INC-25700', service: 'Identity Services', date: '2026-07-15', businessImpact: 'Failed SAML authentication for 45 remote users for 15 minutes', technicalCause: 'ADFS token signing certificate expiry', contributingFactors: 'Automated certificate rollover alert skipped during weekend shift', rootCause: 'Monitoring alert threshold misconfigured for ADFS cert expiry.', correctiveAction: 'Manually renewed ADFS token signing certificate.', preventiveAction: 'Integrated AppViewX certificate lifecycle automation tool.', owner: 'Daniel Mathew', status: 'Closed' },
-  { id: 'RCA-022', incidentRef: 'INC-25590', service: 'ServiceNow Platform', date: '2026-07-02', businessImpact: 'Incident auto-assignment delay for 120 ticket submissions', technicalCause: 'ServiceNow MID Server service freeze', contributingFactors: 'Out-of-memory error on MID Server host VM', rootCause: 'HEAP memory limit allocation insufficient for 4,300 CI CMDB discovery scan.', correctiveAction: 'Restarted MID Server service and increased JVM heap to 8GB.', preventiveAction: 'Configured automated MID Server health check script.', owner: 'Arjun Menon', status: 'Closed' },
-  { id: 'RCA-021', incidentRef: 'INC-25450', service: 'Container Platform', date: '2026-06-20', businessImpact: 'Microservice pods crash-looping in OpenShift prod cluster', technicalCause: 'Kubernetes PVC disk quota filled by audit debug logs', contributingFactors: 'Log verbosity level left at DEBUG after troubleshooting', rootCause: 'Log rotation daemon failed to compress JSON log files.', correctiveAction: 'Purged debug logs and reclaimed 450GB storage space.', preventiveAction: 'Enforced Fluentd log truncation policy and INFO log level.', owner: 'Priya Nair', status: 'Closed' },
-  { id: 'RCA-020', incidentRef: 'INC-25320', service: 'Digital Workplace', date: '2026-06-08', businessImpact: 'Exchange Online hybrid mail flow delay for 30 minutes', technicalCause: 'TLS handshake timeout on edge mail gateway', contributingFactors: 'Expired TLS 1.2 cipher suite on legacy relay node', rootCause: 'Legacy mail relay server skipped during TLS cipher suite hardening.', correctiveAction: 'Updated TLS cipher suite configuration on relay server.', preventiveAction: 'Added edge mail gateways to monthly vulnerability scan schedule.', owner: 'Layla Hassan', status: 'Closed' },
-  { id: 'RCA-019', incidentRef: 'INC-25190', service: 'Infrastructure Platform', date: '2026-05-24', businessImpact: 'Host ESX-02 unexpected reboot during maintenance', technicalCause: 'Kernel panic on SAN HBA driver', contributingFactors: 'Firmware mismatch between HBA and VMware ESXi 7.0 Update 3', rootCause: 'Outdated HBA driver version susceptible to race condition under heavy queue depth.', correctiveAction: 'Upgraded QLogic HBA firmware to v8.04.', preventiveAction: 'Updated VMware HCL compatibility matrix check in CI/CD pipeline.', owner: 'Rakesh Kumar', status: 'Closed' },
+  { id: 'RCA-026', incidentRef: 'INC0048720', service: 'NCGR Digital Services', tower: 'Applications', date: '2026-08-12', businessImpact: 'Intermittent portal slowness affecting 8,450 active users for 24 minutes', technicalCause: 'Connection pool exhaustion following abnormal 300% traffic burst', contributingFactors: 'Stale database connections not released by WebLogic thread pool', rootCause: 'Application connection pool configuration limit set below burst threshold with auto-reconnect disabled.', correctiveAction: 'Adjusted WebLogic pool size from 100 to 300 connections and restarted app cluster.', preventiveAction: 'Implemented Splunk automated pool capacity alerts and auto-scaling rules.', owner: 'Sara Al-Otaibi', status: 'Approved' },
+  { id: 'RCA-025', incidentRef: 'INC0048719', service: 'Enterprise Network', tower: 'Network', date: '2026-08-05', businessImpact: 'High WAN latency between Riyadh Primary and DR site for 42 minutes', technicalCause: 'BGP path flapping on STC secondary fiber link', contributingFactors: 'Intermittent optical transceiver degradation on carrier edge router', rootCause: 'Physical fiber interface packet loss triggered automated BGP route recalculation loop.', correctiveAction: 'Switched primary transport path to standby STC dark fiber link.', preventiveAction: 'Replaced SFP+ optical module and enabled STC SLA link monitoring probe.', owner: 'Mohammed Al-Dosari', status: 'Closed' },
+  { id: 'RCA-024', incidentRef: 'INC0048718', service: 'Database Platform', tower: 'Database', date: '2026-07-28', businessImpact: 'Delayed reporting generation for 12 executive users for 1 hour', technicalCause: 'Oracle RAC node 2 redo log sync delay during batch run', contributingFactors: 'Concurrent backup job overlapped with daily SAP batch query', rootCause: 'Unsynchronized job schedule caused disk I/O contention on SAN storage pool.', correctiveAction: 'Shifted backup window to 02:00 AM off-peak.', preventiveAction: 'Configured I/O priority rules on SAN controller.', owner: 'Omar Al-Mutairi', status: 'Closed' },
+  { id: 'RCA-023', incidentRef: 'INC0048710', service: 'Identity Services', tower: 'Security', date: '2026-07-15', businessImpact: 'Failed SAML authentication for 45 remote users for 15 minutes', technicalCause: 'ADFS token signing certificate expiry', contributingFactors: 'Automated certificate rollover alert skipped during weekend shift', rootCause: 'Monitoring alert threshold misconfigured for ADFS cert expiry.', correctiveAction: 'Manually renewed ADFS token signing certificate.', preventiveAction: 'Integrated AppViewX certificate lifecycle automation tool.', owner: 'Daniel Mathew', status: 'Closed' },
+  { id: 'RCA-022', incidentRef: 'INC0048705', service: 'ServiceNow Platform', tower: 'Applications', date: '2026-07-02', businessImpact: 'Incident auto-assignment delay for 120 ticket submissions', technicalCause: 'ServiceNow MID Server service freeze', contributingFactors: 'Out-of-memory error on MID Server host VM', rootCause: 'HEAP memory limit allocation insufficient for 4,300 CI CMDB discovery scan.', correctiveAction: 'Restarted MID Server service and increased JVM heap to 8GB.', preventiveAction: 'Configured automated MID Server health check script.', owner: 'Arjun Menon', status: 'Closed' },
+  { id: 'RCA-021', incidentRef: 'INC0048706', service: 'Container Platform', tower: 'Cloud', date: '2026-06-20', businessImpact: 'Microservice pods crash-looping in OpenShift prod cluster', technicalCause: 'Kubernetes PVC disk quota filled by audit debug logs', contributingFactors: 'Log verbosity level left at DEBUG after troubleshooting', rootCause: 'Log rotation daemon failed to compress JSON log files.', correctiveAction: 'Purged debug logs and reclaimed 450GB storage space.', preventiveAction: 'Enforced Fluentd log truncation policy and INFO log level.', owner: 'Priya Nair', status: 'Closed' },
+  { id: 'RCA-020', incidentRef: 'INC0048711', service: 'Digital Workplace', tower: 'Digital Workplace', date: '2026-06-08', businessImpact: 'Exchange Online hybrid mail flow delay for 30 minutes', technicalCause: 'TLS handshake timeout on edge mail gateway', contributingFactors: 'Expired TLS 1.2 cipher suite on legacy relay node', rootCause: 'Legacy mail relay server skipped during TLS cipher suite hardening.', correctiveAction: 'Updated TLS cipher suite configuration on relay server.', preventiveAction: 'Added edge mail gateways to monthly vulnerability scan schedule.', owner: 'Layla Hassan', status: 'Closed' },
+  { id: 'RCA-019', incidentRef: 'INC0048701', service: 'Infrastructure Platform', tower: 'Infrastructure', date: '2026-05-24', businessImpact: 'Host ESX-02 unexpected reboot during maintenance', technicalCause: 'Kernel panic on SAN HBA driver', contributingFactors: 'Firmware mismatch between HBA and VMware ESXi 7.0 Update 3', rootCause: 'Outdated HBA driver version susceptible to race condition under heavy queue depth.', correctiveAction: 'Upgraded QLogic HBA firmware to v8.04.', preventiveAction: 'Updated VMware HCL compatibility matrix check in CI/CD pipeline.', owner: 'Rakesh Kumar', status: 'Closed' },
 ];
 
 const OperationalRCA: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedRCA, setSelectedRCA] = useState<RCARecord | null>(null);
 
-  const filteredRCA = rcaList.filter(r =>
-    r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.incidentRef.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.rootCause.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const approvedCount = rcaList.filter(r => r.status === 'Approved' || r.status === 'Closed').length;
+  const underReviewCount = rcaList.filter(r => r.status === 'Under Review' || r.status === 'Draft').length;
+
+  const columns: ColumnDef<RCARecord>[] = [
+    {
+      header: 'RCA ID',
+      accessorKey: 'id',
+      width: '100px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Incident Ref',
+      accessorKey: 'incidentRef',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 600, color: '#DE350B', fontFamily: 'monospace' }}>
+          {row.incidentRef}
+        </span>
+      ),
+    },
+    {
+      header: 'Service & Tower',
+      accessorKey: 'service',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.service}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.tower} • {row.date}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Technical Root Cause Summary',
+      accessorKey: 'rootCause',
+      cell: (row) => (
+        <span style={{ fontSize: '0.8125rem', color: 'var(--text, #101828)' }}>
+          {row.rootCause}
+        </span>
+      ),
+    },
+    {
+      header: 'Corrective Action (CAPA)',
+      accessorKey: 'correctiveAction',
+      cell: (row) => (
+        <span style={{ fontSize: '0.75rem', color: '#40904F', fontWeight: 600 }}>
+          {row.correctiveAction}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Lead',
+      accessorKey: 'owner',
+      cell: (row) => <span style={{ fontWeight: 600 }}>{row.owner}</span>,
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (row) => {
+        const bg = row.status === 'Approved' || row.status === 'Closed' ? '#E3FCEF' : row.status === 'Under Review' ? '#FFF7E6' : '#F4F5F7';
+        const color = row.status === 'Approved' || row.status === 'Closed' ? '#22A06B' : row.status === 'Under Review' ? '#E97F0A' : '#8993A4';
+        return (
+          <span
+            style={{
+              padding: '3px 10px',
+              borderRadius: 12,
+              background: bg,
+              color: color,
+              fontWeight: 700,
+              fontSize: '0.75rem',
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Action',
+      sortable: false,
+      width: '80px',
+      cell: (row) => (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedRCA(row);
+          }}
+          style={{
+            padding: '4px 8px',
+            borderRadius: 4,
+            background: 'var(--bg-secondary, #F7F8FA)',
+            border: '1px solid var(--border, #E4E7EC)',
+            color: 'var(--ncgr-deep-blue, #074A76)',
+            cursor: 'pointer',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+          }}
+        >
+          View
+        </button>
+      ),
+    },
+  ];
+
+  const uniqueTowers = Array.from(new Set(rcaList.map(e => e.tower))).map(t => ({ label: t, value: t }));
+
+  const filters: FilterDef<RCARecord>[] = [
+    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'Approved', value: 'Approved' },
+        { label: 'Closed', value: 'Closed' },
+        { label: 'Under Review', value: 'Under Review' },
+        { label: 'Draft', value: 'Draft' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Critical Operations RCA Repository</h1>
-            <p className="page-subtitle">P1 Major Incident Root Cause Analysis, Corrective & Preventive Action (CAPA) Tracking</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Operational RCA Repository
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          P1/P2 Major Incident Root Cause Analysis, Corrective & Preventive Action (CAPA) tracking, and formal sign-offs
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total RCA Reports</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{rcaList.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Audited investigations</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Approved & Signed-off</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{approvedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>CAPA verified applied</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E97F0A', textTransform: 'uppercase' }}>Under Review</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#E97F0A', marginTop: 4 }}>{underReviewCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>CAB verification pending</div>
         </div>
       </div>
 
-      {/* KPI Cards (Section 6) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Total RCA Reports</div>
-          <div className="kpi-card-value">8</div>
-          <div className="kpi-card-trend neutral">P1 & Major P2 Incidents</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">RCA SLA Compliance</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>100%</div>
-          <div className="kpi-card-trend up">Submitted &lt; 5 Days</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">CAPA Actions Implemented</div>
-          <div className="kpi-card-value" style={{ color: '#4AA6DC' }}>16 / 16</div>
-          <div className="kpi-card-trend up">All Preventative Steps Active</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#1FBBB0' }} />
-          <div className="kpi-card-label">Recurrence Rate</div>
-          <div className="kpi-card-value" style={{ color: '#1FBBB0' }}>0.0%</div>
-          <div className="kpi-card-trend up">Zero Repeat Root Causes</div>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={rcaList}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search RCA by ID, incident, root cause, owner..."
+        searchKeys={['id', 'incidentRef', 'service', 'rootCause', 'technicalCause', 'owner', 'tower']}
+        pageSize={10}
+        onRowClick={(row) => setSelectedRCA(row)}
+        title="Approved Incident RCAs"
+        subtitle="Click any row to open the complete 5-Why and CAPA report"
+        exportFilename="ncgr_operational_rca"
+      />
 
-      {/* RCA Table */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Completed RCA Document Repository (8 Records)</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search RCA records..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>RCA ID</th>
-                <th>Incident Ref</th>
-                <th>Service</th>
-                <th>Date</th>
-                <th style={{ minWidth: 200 }}>Root Cause</th>
-                <th style={{ minWidth: 200 }}>Corrective Action</th>
-                <th>Owner</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRCA.map((r) => (
-                <tr key={r.id} onClick={() => setSelectedRCA(r)} style={{ cursor: 'pointer' }}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{r.id}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-purple)' }}>{r.incidentRef}</td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{r.service}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.date}</td>
-                  <td style={{ fontSize: '0.8125rem' }}>{r.rootCause}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{r.correctiveAction}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{r.owner}</td>
-                  <td>
-                    <span className={`health-badge ${r.status === 'Closed' ? 'healthy' : 'info'}`}>
-                      {r.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Selected RCA Modal */}
+      {/* RCA Detail Modal */}
       {selectedRCA && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: 'var(--card-bg)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius-xl)', padding: 24, maxWidth: 650, width: '100%', color: 'var(--text)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>RCA Executive Summary {selectedRCA.id} ({selectedRCA.incidentRef})</h3>
-              <button onClick={() => setSelectedRCA(null)} style={{ cursor: 'pointer', fontWeight: 700 }}>✕</button>
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(10, 22, 40, 0.45)',
+              backdropFilter: 'blur(3px)',
+              zIndex: 1000,
+            }}
+            onClick={() => setSelectedRCA(null)}
+          />
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '90vw',
+              maxWidth: 680,
+              maxHeight: '85vh',
+              background: 'var(--surface-raised, #FFFFFF)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.2)',
+              borderRadius: 14,
+              zIndex: 1001,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 24,
+              overflowY: 'auto',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+                  {selectedRCA.id} • Incident Ref: {selectedRCA.incidentRef}
+                </span>
+                <h3 style={{ margin: '4px 0 0', fontSize: '1.125rem', fontWeight: 800, color: 'var(--text, #101828)' }}>
+                  {selectedRCA.service} RCA Investigation Report
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedRCA(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+              >
+                <X size={20} color="var(--text-tertiary, #98A2B3)" />
+              </button>
             </div>
-            <div style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
-              <p style={{ marginBottom: 8 }}><strong>Service:</strong> {selectedRCA.service} ({selectedRCA.date})</p>
-              <p style={{ marginBottom: 8 }}><strong>Business Impact:</strong> {selectedRCA.businessImpact}</p>
-              <p style={{ marginBottom: 8 }}><strong>Technical Cause:</strong> {selectedRCA.technicalCause}</p>
-              <p style={{ marginBottom: 8 }}><strong>Contributing Factors:</strong> {selectedRCA.contributingFactors}</p>
-              <p style={{ marginBottom: 8, background: 'var(--bg-secondary)', padding: 8, borderRadius: 4 }}><strong>Root Cause:</strong> {selectedRCA.rootCause}</p>
-              <p style={{ marginBottom: 8 }}><strong>Corrective Action:</strong> {selectedRCA.correctiveAction}</p>
-              <p style={{ marginBottom: 8 }}><strong>Preventive Action:</strong> {selectedRCA.preventiveAction}</p>
-              <p><strong>Owner / Approver:</strong> {selectedRCA.owner} ({selectedRCA.status})</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: '0.875rem' }}>
+              <div style={{ padding: 12, borderRadius: 8, background: '#FFEBE6', border: '1px solid rgba(222,53,11,0.2)' }}>
+                <strong style={{ color: '#DE350B' }}>Business Impact Summary:</strong>
+                <div style={{ marginTop: 4, color: '#DE350B', fontWeight: 600 }}>{selectedRCA.businessImpact}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ color: 'var(--text-secondary, #475467)' }}>Primary Technical Root Cause:</strong>
+                <div style={{ marginTop: 4, fontWeight: 700 }}>{selectedRCA.rootCause}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ color: 'var(--text-secondary, #475467)' }}>Contributing Factors:</strong>
+                <div style={{ marginTop: 4 }}>{selectedRCA.contributingFactors}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(64,144,79,0.08)', border: '1px solid rgba(64,144,79,0.3)' }}>
+                <strong style={{ color: '#40904F' }}>Corrective Action (Immediate Fix):</strong>
+                <div style={{ marginTop: 4, color: '#2E6B39', fontWeight: 600 }}>{selectedRCA.correctiveAction}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(7,74,118,0.08)', border: '1px solid rgba(7,74,118,0.3)' }}>
+                <strong style={{ color: '#074A76' }}>Preventive Action (Long-Term CAPA):</strong>
+                <div style={{ marginTop: 4, color: '#05263F' }}>{selectedRCA.preventiveAction}</div>
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
+                <strong style={{ color: 'var(--text-secondary, #475467)' }}>Lead Author & Sign-off Date:</strong>
+                <div style={{ marginTop: 4 }}>
+                  Authored by: <strong>{selectedRCA.owner}</strong> ({selectedRCA.tower}) on {selectedRCA.date} • Status: <strong>{selectedRCA.status}</strong>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -1,143 +1,204 @@
 import React, { useState } from 'react';
-import { appIncidentsList } from '../../data/master-applications';
+import { appIncidentsList, type AppIncidentRecord } from '../../data/master-applications';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
-import { Search, ExternalLink } from 'lucide-react';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 
 const ApplicationIncidentsPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
-  const filteredIncidents = appIncidentsList.filter(inc =>
-    inc.incidentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inc.appName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    inc.assignedEngineer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const p1Count = appIncidentsList.filter(i => i.priority === 'P1').length;
+  const p2Count = appIncidentsList.filter(i => i.priority === 'P2').length;
+  const inProgressCount = appIncidentsList.filter(i => i.currentStatus === 'In Progress' || i.currentStatus === 'Major Incident').length;
+
+  const columns: ColumnDef<AppIncidentRecord>[] = [
+    {
+      header: 'Incident ID',
+      accessorKey: 'incidentNumber',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.incidentNumber}
+        </span>
+      ),
+    },
+    {
+      header: 'Priority',
+      accessorKey: 'priority',
+      width: '80px',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontWeight: 800,
+            fontSize: '0.6875rem',
+            background: row.priority === 'P1' ? '#FFEBE6' : row.priority === 'P2' ? '#FFF7E6' : '#E6F4FC',
+            color: row.priority === 'P1' ? '#DE350B' : row.priority === 'P2' ? '#E97F0A' : '#074A76',
+          }}
+        >
+          {row.priority}
+        </span>
+      ),
+    },
+    {
+      header: 'Application & Description',
+      accessorKey: 'appName',
+      cell: (row) => (
+        <div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedAppId(row.appId);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontWeight: 700,
+              color: 'var(--ncgr-deep-blue, #074A76)',
+              cursor: 'pointer',
+              padding: 0,
+              textAlign: 'left',
+              fontSize: '0.875rem',
+              textDecoration: 'underline',
+            }}
+          >
+            {row.appName}
+          </button>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>{row.description}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Assigned Engineer',
+      accessorKey: 'assignedEngineer',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{row.assignedEngineer}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>Group: {row.assignmentGroup}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Age',
+      accessorKey: 'age',
+      cell: (row) => <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem', fontWeight: 600 }}>{row.age}</span>,
+    },
+    {
+      header: 'Related Problem / Ref',
+      accessorKey: 'servicenowRef',
+      cell: (row) => (
+        <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', color: '#074A76' }}>
+          {row.relatedProblem || row.servicenowRef}
+        </span>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'currentStatus',
+      cell: (row) => {
+        const bg = row.currentStatus === 'Resolved' ? '#E3FCEF' : row.currentStatus === 'In Progress' ? '#E6F4FC' : '#FFEBE6';
+        const color = row.currentStatus === 'Resolved' ? '#22A06B' : row.currentStatus === 'In Progress' ? '#074A76' : '#DE350B';
+        return (
+          <span
+            className="status-badge"
+            style={{
+              background: bg,
+              color: color,
+            }}
+          >
+            {row.currentStatus}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const uniqueApps = Array.from(new Set(appIncidentsList.map(a => a.appName))).map(a => ({ label: a, value: a }));
+
+  const filters: FilterDef<AppIncidentRecord>[] = [
+    {
+      key: 'priority',
+      label: 'Priorities',
+      options: [
+        { label: 'P1 Critical', value: 'P1' },
+        { label: 'P2 High', value: 'P2' },
+        { label: 'P3 Medium', value: 'P3' },
+        { label: 'P4 Low', value: 'P4' },
+      ],
+    },
+    { key: 'appName', label: 'Applications', options: uniqueApps },
+    {
+      key: 'currentStatus',
+      label: 'Statuses',
+      options: [
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Major Incident', value: 'Major Incident' },
+        { label: 'Monitoring', value: 'Monitoring' },
+        { label: 'Resolved', value: 'Resolved' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Application Operations Incidents (ServiceNow Integration)</h1>
-            <p className="page-subtitle">ServiceNow Incident Telemetry, P1/P2 Active Major Incidents & Business Impact</p>
-          </div>
-          <span className="simulated-badge">Source: ServiceNow — DEMO DATA</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Application Operations Incidents
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          ServiceNow application ticket telemetry, P1/P2 active major incidents, MTTR tracking, and engineer assignment
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Active App Incidents</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{appIncidentsList.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Across 48 applications</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>P1 Critical / P2 Major</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{p1Count} / {p2Count}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Active bridge focus</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#074A76', textTransform: 'uppercase' }}>In Progress</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#074A76', marginTop: 4 }}>{inProgressCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#074A76', marginTop: 2, fontWeight: 600 }}>Assigned to L2/L3</div>
         </div>
       </div>
 
-      {/* KPI Overview (Module 4 Spec) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Open App Incidents</div>
-          <div className="kpi-card-value">17</div>
-          <div className="kpi-card-trend neutral">Across 48 Applications</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">P1 Major Incidents</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>1</div>
-          <div className="kpi-card-trend down">INC0012847 (Procurement)</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">P2 High Priority</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>4</div>
-          <div className="kpi-card-trend down">Integration & Finance APIs</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">P3 / P4 Medium & Low</div>
-          <div className="kpi-card-value">8 / 4</div>
-          <div className="kpi-card-trend neutral">Assigned to Support L2</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#671E75' }} />
-          <div className="kpi-card-label">Aging &gt; 7 Days</div>
-          <div className="kpi-card-value">3</div>
-          <div className="kpi-card-trend neutral">2 Repeated Incidents</div>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={appIncidentsList}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search incidents by ID, app, description, engineer..."
+        searchKeys={['incidentNumber', 'appName', 'description', 'assignedEngineer', 'servicenowRef']}
+        pageSize={10}
+        title="Application Incident Feed"
+        subtitle="Click any application name to inspect architecture, dependencies, and owners"
+        exportFilename="ncgr_app_incidents"
+      />
 
-      {/* Incidents Table (Module 4 Spec) */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Application Incident Management Records</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search incident # or app name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Incident #</th>
-                <th>Target Application</th>
-                <th>Priority</th>
-                <th style={{ minWidth: 200 }}>Issue Description</th>
-                <th>Current Status</th>
-                <th>Assignment Group</th>
-                <th>Assigned Engineer</th>
-                <th>Opened Date / Age</th>
-                <th>ServiceNow Link</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredIncidents.map((inc) => (
-                <tr key={inc.incidentNumber}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-purple)', fontWeight: 700 }}>
-                    {inc.incidentNumber}
-                  </td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--ncgr-deep-blue)', cursor: 'pointer' }} onClick={() => setSelectedAppId(inc.appId)}>
-                    {inc.appName}
-                  </td>
-                  <td>
-                    <span className={`health-badge ${inc.priority === 'P1' ? 'critical' : inc.priority === 'P2' ? 'at-risk' : 'healthy'}`}>
-                      {inc.priority}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.8125rem' }}>
-                    {inc.description}
-                    <br />
-                    <span style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Impact: {inc.businessImpact}</span>
-                  </td>
-                  <td>
-                    <span className={`health-badge ${inc.currentStatus === 'Resolved' ? 'healthy' : inc.currentStatus === 'Major Incident' ? 'critical' : 'info'}`}>
-                      {inc.currentStatus}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem' }}>{inc.assignmentGroup}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{inc.assignedEngineer}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                    {inc.openedDate}<br />
-                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{inc.age}</span>
-                  </td>
-                  <td>
-                    <a
-                      href={inc.servicenowRef}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                      View in ServiceNow <ExternalLink size={12} />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <ApplicationDetailModal appId={selectedAppId} onClose={() => setSelectedAppId(null)} />
+      {/* App Detail Modal */}
+      {selectedAppId && (
+        <ApplicationDetailModal
+          appId={selectedAppId}
+          onClose={() => setSelectedAppId(null)}
+        />
+      )}
     </div>
   );
 };

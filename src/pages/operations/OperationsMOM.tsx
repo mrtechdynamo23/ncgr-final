@@ -1,138 +1,218 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { momActionsList } from '../../data/master-employees';
-import { Search } from 'lucide-react';
+import React from 'react';
+import { useDataStore } from '../../data/mockDataStore';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import type { MomAction } from '../../data/master-employees';
 
 const OperationsMOM: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const { momActions } = useDataStore();
 
-  const filteredActions = momActionsList.filter(act => {
-    const matchesSearch = act.action.toLowerCase().includes(searchTerm.toLowerCase()) || act.owner.toLowerCase().includes(searchTerm.toLowerCase()) || act.meeting.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPriority = priorityFilter === 'all' || act.priority.toLowerCase() === priorityFilter.toLowerCase();
-    return matchesSearch && matchesPriority;
-  });
+  const openCount = momActions.filter(a => a.status === 'Open').length;
+  const inProgressCount = momActions.filter(a => a.status === 'In Progress').length;
+  const completedCount = momActions.filter(a => a.status === 'Completed').length;
+  const overdueCount = momActions.filter(a => a.status === 'Overdue').length;
+  const escalatedCount = momActions.filter(a => a.escalationRequired).length;
 
-  const openCount = momActionsList.filter(a => a.status === 'Open').length;
-  const inProgressCount = momActionsList.filter(a => a.status === 'In Progress').length;
-  const completedCount = momActionsList.filter(a => a.status === 'Completed').length;
-  const overdueCount = momActionsList.filter(a => a.status === 'Overdue').length;
-  const highPriorityCount = momActionsList.filter(a => a.priority === 'High').length;
+  const columns: ColumnDef<MomAction>[] = [
+    {
+      header: 'Action ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Action Item Description',
+      accessorKey: 'action',
+      cell: (row) => (
+        <div style={{ minWidth: 260 }}>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.action}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            Meeting: {row.meeting} • Date: {row.date}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Tower',
+      accessorKey: 'tower',
+      width: '140px',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '3px 8px',
+            borderRadius: 4,
+            background: 'var(--bg-secondary, #F7F8FA)',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            border: '1px solid var(--border, #E4E7EC)',
+            display: 'inline-block',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {row.tower}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Owner',
+      accessorKey: 'owner',
+      width: '180px',
+      cell: (row) => <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{row.owner}</span>,
+    },
+    {
+      header: 'Priority',
+      accessorKey: 'priority',
+      width: '90px',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: row.priority === 'High' ? '#FFEBE6' : row.priority === 'Medium' ? '#FFF7E6' : '#E6F4FC',
+            color: row.priority === 'High' ? '#DE350B' : row.priority === 'Medium' ? '#E97F0A' : '#074A76',
+            fontWeight: 700,
+            fontSize: '0.6875rem',
+            textTransform: 'uppercase',
+            display: 'inline-block',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {row.priority}
+        </span>
+      ),
+    },
+    {
+      header: 'Due Date',
+      accessorKey: 'dueDate',
+      width: '130px',
+      cell: (row) => (
+        <div>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{row.dueDate}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>Age: {row.age}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      width: '130px',
+      cell: (row) => {
+        const bg = row.status === 'Completed' ? '#E3FCEF' : row.status === 'In Progress' ? '#E6F4FC' : row.status === 'Open' ? '#FFF7E6' : '#FFEBE6';
+        const color = row.status === 'Completed' ? '#22A06B' : row.status === 'In Progress' ? '#074A76' : row.status === 'Open' ? '#E97F0A' : '#DE350B';
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '4px 10px',
+              borderRadius: 12,
+              background: bg,
+              color: color,
+              fontWeight: 700,
+              fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
+              minWidth: 90,
+              height: 24,
+              boxSizing: 'border-box',
+              lineHeight: 1,
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const uniqueTowers = Array.from(new Set(momActions.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueMeetings = Array.from(new Set(momActions.map(e => e.meeting))).map(m => ({ label: m, value: m }));
+
+  const filters: FilterDef<MomAction>[] = [
+    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    { key: 'meeting', label: 'Meetings', options: uniqueMeetings },
+    {
+      key: 'priority',
+      label: 'Priorities',
+      options: [
+        { label: 'High', value: 'High' },
+        { label: 'Medium', value: 'Medium' },
+        { label: 'Low', value: 'Low' },
+      ],
+    },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'Open', value: 'Open' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Completed', value: 'Completed' },
+        { label: 'Overdue', value: 'Overdue' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Operations MOM & Action Tracker</h1>
-            <p className="page-subtitle">Minutes of Meetings, Operational Decisions, Action Items & Governance Tracking</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Operations MOM & Action Tracker
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          Governance meeting decisions, daily standup action items, CAB actions, and resolution timelines
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Action Items</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{momActions.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Across all governance forums</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>In Progress / Open</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#4AA6DC', marginTop: 4 }}>{inProgressCount + openCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Active remediation</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Completed Actions</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{completedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Verified closed</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Overdue / Escalated</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{overdueCount} ({escalatedCount})</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Escalation flagged</div>
         </div>
       </div>
 
-      {/* KPI Cards (Section 5) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Total Actions</div>
-          <div className="kpi-card-value">15</div>
-          <div className="kpi-card-trend neutral">Across Standups & CAB</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">In Progress</div>
-          <div className="kpi-card-value" style={{ color: '#4AA6DC' }}>{inProgressCount}</div>
-          <div className="kpi-card-trend neutral">Active Remediation</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">Open Actions</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>{openCount}</div>
-          <div className="kpi-card-trend neutral">Pending Owner Start</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">High Priority / Overdue</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>{highPriorityCount} / {overdueCount}</div>
-          <div className="kpi-card-trend down">Requires Management Focus</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">Completed</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>{completedCount}</div>
-          <div className="kpi-card-trend up">Closed This Week</div>
-        </div>
-      </div>
-
-      {/* Action Table */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">MOM Action Tracker (15 Operational Actions)</h2>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div className="header-search" style={{ width: 240 }}>
-              <Search size={16} className="header-search-icon" />
-              <input
-                type="text"
-                placeholder="Search action or owner..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="form-select"
-              style={{ width: 140, padding: '6px 10px', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--border)', background: 'var(--card-bg)', color: 'var(--text)' }}
-            >
-              <option value="all">All Priorities</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Action ID</th>
-                <th>Meeting Source</th>
-                <th style={{ minWidth: 260 }}>Action Description</th>
-                <th>Owner</th>
-                <th>Priority</th>
-                <th>Due Date</th>
-                <th>Age</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredActions.map((act) => (
-                <tr key={act.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{act.id}</td>
-                  <td style={{ fontSize: '0.75rem', fontWeight: 500 }}>{act.meeting}<br /><span style={{ color: 'var(--text-tertiary)' }}>{act.date}</span></td>
-                  <td style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{act.action}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{act.owner}</td>
-                  <td>
-                    <span className={`health-badge ${act.priority === 'High' ? 'critical' : act.priority === 'Medium' ? 'at-risk' : 'healthy'}`}>
-                      {act.priority}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{act.dueDate}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{act.age}</td>
-                  <td>
-                    <span className={`health-badge ${act.status === 'Completed' ? 'healthy' : act.status === 'In Progress' ? 'info' : act.status === 'Overdue' ? 'critical' : 'at-risk'}`}>
-                      {act.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={momActions}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search by action item, owner, meeting, or tower..."
+        searchKeys={['action', 'id', 'owner', 'meeting', 'tower']}
+        pageSize={15}
+        title="Operations Action Register"
+        subtitle="Tracking operational action commitments from standups, CAB, and tower governance meetings"
+        exportFilename="ncgr_operations_mom"
+      />
     </div>
   );
 };

@@ -1,136 +1,215 @@
 import React, { useState } from 'react';
-import { appChangesList } from '../../data/master-applications';
+import { appChangesList, type AppChangeRecord } from '../../data/master-applications';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
-import { Search, ExternalLink } from 'lucide-react';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 
 const ApplicationChangesPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
-  const filteredChanges = appChangesList.filter(c =>
-    c.changeNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.appName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.owner.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const emergencyCount = appChangesList.filter(c => c.changeType === 'Emergency').length;
+  const standardCount = appChangesList.filter(c => c.changeType === 'Standard').length;
+  const normalCount = appChangesList.filter(c => c.changeType === 'Normal').length;
+
+  const columns: ColumnDef<AppChangeRecord>[] = [
+    {
+      header: 'Change ID',
+      accessorKey: 'changeNumber',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.changeNumber}
+        </span>
+      ),
+    },
+    {
+      header: 'Change Type',
+      accessorKey: 'changeType',
+      width: '90px',
+      cell: (row) => {
+        const bg = row.changeType === 'Emergency' ? '#FFEBE6' : row.changeType === 'Normal' ? '#E6F4FC' : '#E3FCEF';
+        const color = row.changeType === 'Emergency' ? '#DE350B' : row.changeType === 'Normal' ? '#074A76' : '#22A06B';
+        return (
+          <span
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              fontWeight: 800,
+              fontSize: '0.6875rem',
+              background: bg,
+              color: color,
+              textTransform: 'uppercase',
+            }}
+          >
+            {row.changeType}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Application & Description',
+      accessorKey: 'appName',
+      cell: (row) => (
+        <div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedAppId(row.appId);
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontWeight: 700,
+              color: 'var(--ncgr-deep-blue, #074A76)',
+              cursor: 'pointer',
+              padding: 0,
+              textAlign: 'left',
+              fontSize: '0.875rem',
+              textDecoration: 'underline',
+            }}
+          >
+            {row.appName}
+          </button>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>{row.description}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Risk Level',
+      accessorKey: 'risk',
+      cell: (row) => (
+        <span
+          style={{
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            color: row.risk === 'High' ? '#DE350B' : row.risk === 'Medium' ? '#E97F0A' : '#22A06B',
+          }}
+        >
+          {row.risk} Risk
+        </span>
+      ),
+    },
+    {
+      header: 'Deployment Window',
+      accessorKey: 'scheduledDate',
+      cell: (row) => <span style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>{row.scheduledDate}</span>,
+    },
+    {
+      header: 'Change Owner',
+      accessorKey: 'owner',
+      cell: (row) => <span style={{ fontWeight: 600 }}>{row.owner}</span>,
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (row) => {
+        const bg = row.status === 'Completed' ? '#E3FCEF' : row.status === 'Scheduled' || row.status === 'CAB Approved' ? '#E6F4FC' : '#FFF7E6';
+        const color = row.status === 'Completed' ? '#22A06B' : row.status === 'Scheduled' || row.status === 'CAB Approved' ? '#074A76' : '#E97F0A';
+        return (
+          <span
+            className="status-badge"
+            style={{
+              background: bg,
+              color: color,
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const filters: FilterDef<AppChangeRecord>[] = [
+    {
+      key: 'changeType',
+      label: 'Change Types',
+      options: [
+        { label: 'Normal', value: 'Normal' },
+        { label: 'Standard', value: 'Standard' },
+        { label: 'Emergency', value: 'Emergency' },
+      ],
+    },
+    {
+      key: 'risk',
+      label: 'Risk Levels',
+      options: [
+        { label: 'Low', value: 'Low' },
+        { label: 'Medium', value: 'Medium' },
+        { label: 'High', value: 'High' },
+      ],
+    },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'Scheduled', value: 'Scheduled' },
+        { label: 'CAB Approved', value: 'CAB Approved' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Completed', value: 'Completed' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Application Changes & Release Schedule</h1>
-            <p className="page-subtitle">Change Advisory Board (CAB) Approvals, Emergency Hotfixes & Release Deployment Calendar</p>
-          </div>
-          <span className="simulated-badge">Source: ServiceNow — DEMO DATA</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Application Changes & Release Calendar
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          Change Advisory Board (CAB) approvals, release deployment windows, emergency hotfixes, and risk impact
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Planned Changes</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{appChangesList.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>August release train</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#074A76', textTransform: 'uppercase' }}>Normal / Standard</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#074A76', marginTop: 4 }}>{normalCount + standardCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#074A76', marginTop: 2, fontWeight: 600 }}>CAB authorized</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>Emergency Hotfixes</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{emergencyCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Post-CAB review</div>
         </div>
       </div>
 
-      {/* KPI Overview (Module 6 Spec) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Changes This Month</div>
-          <div className="kpi-card-value">42</div>
-          <div className="kpi-card-trend neutral">August 2026 Release Train</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">Successful Deployments</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>40</div>
-          <div className="kpi-card-trend up">Change Success Rate 95.2%</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#DE350B' }} />
-          <div className="kpi-card-label">Failed / Emergency</div>
-          <div className="kpi-card-value" style={{ color: '#DE350B' }}>1 / 1</div>
-          <div className="kpi-card-trend down">CHG004263 (EIH Emergency Hotfix)</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">Upcoming Releases</div>
-          <div className="kpi-card-value">7</div>
-          <div className="kpi-card-trend neutral">Next Release: 16 Aug</div>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={appChangesList}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search changes by ID, app, description, owner..."
+        searchKeys={['changeNumber', 'appName', 'description', 'owner', 'risk', 'releaseVersion']}
+        pageSize={10}
+        title="Application Change Registry"
+        subtitle="Click any application to inspect dependencies and architecture"
+        exportFilename="ncgr_app_changes"
+      />
 
-      {/* Release Calendar Table (Module 6 Spec) */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Application Change Schedule & Release Calendar</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search change # or app name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Change #</th>
-                <th>Target Application</th>
-                <th>Change Type</th>
-                <th style={{ minWidth: 220 }}>Description</th>
-                <th>Release Version</th>
-                <th>Scheduled Date</th>
-                <th>Risk Level</th>
-                <th>Approval Status</th>
-                <th>Owner</th>
-                <th>ServiceNow Link</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredChanges.map((chg) => (
-                <tr key={chg.changeNumber}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)', fontWeight: 700 }}>
-                    {chg.changeNumber}
-                  </td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--ncgr-deep-blue)', cursor: 'pointer' }} onClick={() => setSelectedAppId(chg.appId)}>
-                    {chg.appName}
-                  </td>
-                  <td>
-                    <span className={`health-badge ${chg.changeType === 'Emergency' ? 'critical' : chg.changeType === 'Normal' ? 'at-risk' : 'healthy'}`}>
-                      {chg.changeType}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.8125rem' }}>{chg.description}</td>
-                  <td style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{chg.releaseVersion}</td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{chg.scheduledDate}</td>
-                  <td>
-                    <span className={`health-badge ${chg.risk === 'High' ? 'critical' : chg.risk === 'Medium' ? 'at-risk' : 'healthy'}`}>
-                      {chg.risk}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`health-badge ${chg.status === 'Completed' ? 'healthy' : chg.status === 'CAB Approved' ? 'info' : 'at-risk'}`}>
-                      {chg.status}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem' }}>{chg.owner}</td>
-                  <td>
-                    <a
-                      href={chg.servicenowRef}
-                      target="_blank"
-                      rel="noreferrer"
-                      style={{ fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
-                    >
-                      View Change <ExternalLink size={12} />
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <ApplicationDetailModal appId={selectedAppId} onClose={() => setSelectedAppId(null)} />
+      {/* App Detail Modal */}
+      {selectedAppId && (
+        <ApplicationDetailModal
+          appId={selectedAppId}
+          onClose={() => setSelectedAppId(null)}
+        />
+      )}
     </div>
   );
 };

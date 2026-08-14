@@ -1,144 +1,206 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Search } from 'lucide-react';
-
-interface ServiceRequest {
-  id: string;
-  requestedBy: string;
-  requestType: string;
-  service: string;
-  priority: 'P1' | 'P2' | 'P3' | 'P4';
-  submittedDate: string;
-  assignedGroup: string;
-  status: 'New' | 'In Progress' | 'Fulfilled' | 'Pending Approval';
-  age: string;
-}
-
-const serviceRequestsList: ServiceRequest[] = [
-  { id: 'REQ-40101', requestedBy: 'Faisal Al-Harbi', requestType: 'PAM Privileged Access Token', service: 'Identity Services', priority: 'P2', submittedDate: '2026-08-12 08:30', assignedGroup: 'Security Operations', status: 'In Progress', age: '3 hrs' },
-  { id: 'REQ-40102', requestedBy: 'Aisha Rahman', requestType: 'New Staff Laptop Provisioning', service: 'Digital Workplace', priority: 'P3', submittedDate: '2026-08-12 09:15', assignedGroup: 'Digital Workplace', status: 'In Progress', age: '2 hrs' },
-  { id: 'REQ-40103', requestedBy: 'Omar Al-Mutairi', requestType: 'Oracle DB Schema Export Quota', service: 'Database Platform', priority: 'P2', submittedDate: '2026-08-11 14:00', assignedGroup: 'Database Tower', status: 'Pending Approval', age: '21 hrs' },
-  { id: 'REQ-40104', requestedBy: 'Sara Al-Otaibi', requestType: 'AppDynamics Agent License', service: 'Monitoring Platform', priority: 'P3', submittedDate: '2026-08-11 11:30', assignedGroup: 'Automation & AI', status: 'Fulfilled', age: '1 day' },
-  { id: 'REQ-40105', requestedBy: 'Khalid Al-Shammari', requestType: 'SolarWinds Alert Whitelist', service: 'NOC Observability', priority: 'P3', submittedDate: '2026-08-10 16:45', assignedGroup: 'NOC Tower', status: 'Fulfilled', age: '2 days' },
-  { id: 'REQ-40106', requestedBy: 'Priya Nair', requestType: 'GCP Project Quota Increase', service: 'Cloud Platforms', priority: 'P2', submittedDate: '2026-08-10 10:00', assignedGroup: 'Cloud Ops', status: 'In Progress', age: '2 days' },
-  { id: 'REQ-40107', requestedBy: 'Daniel Mathew', requestType: 'SSL Certificate Renewal', service: 'NCGR Portal', priority: 'P1', submittedDate: '2026-08-12 07:00', assignedGroup: 'Security Ops', status: 'In Progress', age: '4 hrs' },
-  { id: 'REQ-40108', requestedBy: 'Layla Hassan', requestType: 'Teams Phone Extension Allocation', service: 'Collaboration', priority: 'P4', submittedDate: '2026-08-09 13:20', assignedGroup: 'Digital Workplace', status: 'Fulfilled', age: '3 days' },
-  { id: 'REQ-40109', requestedBy: 'Arjun Menon', requestType: 'ServiceNow Integration Webhook', service: 'Service Management', priority: 'P2', submittedDate: '2026-08-09 09:00', assignedGroup: 'Service Management', status: 'Fulfilled', age: '3 days' },
-  { id: 'REQ-40110', requestedBy: 'Rakesh Kumar', requestType: 'SAN Storage Volume Allocation 2TB', service: 'Infrastructure Platform', priority: 'P2', submittedDate: '2026-08-08 15:30', assignedGroup: 'Infrastructure Tower', status: 'Fulfilled', age: '4 days' },
-  { id: 'REQ-40111', requestedBy: 'Huda Al-Salem', requestType: 'CAB Workflow Authorization', service: 'Service Management', priority: 'P3', submittedDate: '2026-08-08 11:00', assignedGroup: 'Service Management', status: 'Fulfilled', age: '4 days' },
-  { id: 'REQ-40112', requestedBy: 'Mohammed Al-Dosari', requestType: 'STC SD-WAN Firewall Rule', service: 'Enterprise Network', priority: 'P2', submittedDate: '2026-08-07 14:15', assignedGroup: 'Network Ops', status: 'Fulfilled', age: '5 days' },
-  { id: 'REQ-40113', requestedBy: 'Noura Al-Qahtani', requestType: 'PowerBI Executive Workspace', service: 'Reporting Platform', priority: 'P3', submittedDate: '2026-08-06 10:45', assignedGroup: 'Automation & AI', status: 'Fulfilled', age: '6 days' },
-  { id: 'REQ-40114', requestedBy: 'Vivek Srinivasan', requestType: 'Anodot Cloud Cost Export Access', service: 'FinOps Platform', priority: 'P3', submittedDate: '2026-08-05 16:00', assignedGroup: 'Cloud Ops', status: 'Fulfilled', age: '7 days' },
-  { id: 'REQ-40115', requestedBy: 'Ahmed Al-Qahtani', requestType: 'OpenShift Namespace Quota 50-Pods', service: 'Container Platform', priority: 'P2', submittedDate: '2026-08-05 09:30', assignedGroup: 'Cloud Ops', status: 'Fulfilled', age: '7 days' },
-];
+import React from 'react';
+import { useDataStore } from '../../data/mockDataStore';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import type { ServiceRequest } from '../../data/serviceRequests';
 
 const ServiceRequests: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
+  const { serviceRequests } = useDataStore();
 
-  const filteredRequests = serviceRequestsList.filter(r =>
-    r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.requestedBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.requestType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.service.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const openCount = serviceRequests.filter(r => r.status === 'Open' || r.status === 'In Progress').length;
+  const fulfilledCount = serviceRequests.filter(r => r.status === 'Fulfilled' || r.status === 'Closed').length;
+  const highPriorityCount = serviceRequests.filter(r => r.priority === 'Critical' || r.priority === 'High').length;
+
+  const columns: ColumnDef<ServiceRequest>[] = [
+    {
+      header: 'Request ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Request Type & Item',
+      accessorKey: 'requestType',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.requestType}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.catalogItem}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Requested By & Dept',
+      accessorKey: 'requestedBy',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{row.requestedBy}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>{row.department}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Tower',
+      accessorKey: 'tower',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            background: 'var(--bg-secondary, #F7F8FA)',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            border: '1px solid var(--border, #E4E7EC)',
+          }}
+        >
+          {row.tower}
+        </span>
+      ),
+    },
+    {
+      header: 'Assigned Engineer',
+      accessorKey: 'assignedEngineer',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 600 }}>{row.assignedEngineer}</div>
+          <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.assignmentGroup}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Priority',
+      accessorKey: 'priority',
+      cell: (row) => {
+        const bg = row.priority === 'Critical' ? '#FFEBE6' : row.priority === 'High' ? '#FFF7E6' : '#E6F4FC';
+        const color = row.priority === 'Critical' ? '#DE350B' : row.priority === 'High' ? '#E97F0A' : '#074A76';
+        return (
+          <span
+            style={{
+              padding: '2px 8px',
+              borderRadius: 4,
+              background: bg,
+              color: color,
+              fontWeight: 700,
+              fontSize: '0.6875rem',
+              textTransform: 'uppercase',
+            }}
+          >
+            {row.priority}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'Aging & Due Date',
+      accessorKey: 'aging',
+      cell: (row) => (
+        <div>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Due: {row.dueDate}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>Age: {row.aging}</div>
+        </div>
+      ),
+    },
+    {
+      header: 'Status',
+      accessorKey: 'status',
+      cell: (row) => {
+        const bg = row.status === 'Fulfilled' || row.status === 'Closed' ? '#E3FCEF' : row.status === 'In Progress' ? '#E6F4FC' : '#FFF7E6';
+        const color = row.status === 'Fulfilled' || row.status === 'Closed' ? '#22A06B' : row.status === 'In Progress' ? '#074A76' : '#E97F0A';
+        return (
+          <span
+            className="status-badge"
+            style={{
+              background: bg,
+              color: color,
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+    },
+  ];
+
+  const uniqueTowers = Array.from(new Set(serviceRequests.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueTypes = Array.from(new Set(serviceRequests.map(e => e.requestType))).map(t => ({ label: t, value: t }));
+  const uniqueDepts = Array.from(new Set(serviceRequests.map(e => e.department))).map(d => ({ label: d, value: d }));
+
+  const filters: FilterDef<ServiceRequest>[] = [
+    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    { key: 'requestType', label: 'Request Types', options: uniqueTypes },
+    { key: 'department', label: 'Departments', options: uniqueDepts },
+    {
+      key: 'status',
+      label: 'Statuses',
+      options: [
+        { label: 'Open', value: 'Open' },
+        { label: 'In Progress', value: 'In Progress' },
+        { label: 'Fulfilled', value: 'Fulfilled' },
+        { label: 'Closed', value: 'Closed' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Service Request Management</h1>
-            <p className="page-subtitle">User Access, Hardware Provisioning, Software Licenses & Cloud Quotas</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Service Request Management
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          User access provisioning, hardware catalog requests, software licenses, cloud quotas, and fulfillment queues
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Requests</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{serviceRequests.length}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Service catalog tickets</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E97F0A', textTransform: 'uppercase' }}>In Fulfillment / Open</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#E97F0A', marginTop: 4 }}>{openCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Within SLA target</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Fulfilled / Closed</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{fulfilledCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Customer confirmed</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>High Priority Quotas</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{highPriorityCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Expedited queue</div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Total Requests (Month)</div>
-          <div className="kpi-card-value">142</div>
-          <div className="kpi-card-trend neutral">Avg Fulfillment 4.2 hrs</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">In Progress</div>
-          <div className="kpi-card-value" style={{ color: '#4AA6DC' }}>4</div>
-          <div className="kpi-card-trend neutral">Active Fulfillment</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">Pending Approval</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>1</div>
-          <div className="kpi-card-trend neutral">Approver: Ahmed Al-Qahtani</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">SLA Compliance</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>97.4%</div>
-          <div className="kpi-card-trend up">Target 95%</div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Recent Service Requests (15 Records)</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search service requests..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Request ID</th>
-                <th>Requested By</th>
-                <th style={{ minWidth: 200 }}>Request Type</th>
-                <th>Target Service</th>
-                <th>Priority</th>
-                <th>Submitted Date</th>
-                <th>Assigned Group</th>
-                <th>Status</th>
-                <th>Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((req) => (
-                <tr key={req.id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{req.id}</td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem' }}>{req.requestedBy}</td>
-                  <td style={{ fontSize: '0.8125rem' }}>{req.requestType}</td>
-                  <td><span className="health-badge healthy" style={{ fontSize: '0.625rem' }}>{req.service}</span></td>
-                  <td>
-                    <span className={`health-badge ${req.priority === 'P1' ? 'critical' : req.priority === 'P2' ? 'at-risk' : 'healthy'}`}>
-                      {req.priority}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{req.submittedDate}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{req.assignedGroup}</td>
-                  <td>
-                    <span className={`health-badge ${req.status === 'Fulfilled' ? 'healthy' : req.status === 'In Progress' ? 'info' : 'at-risk'}`}>
-                      {req.status}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{req.age}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={serviceRequests}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search requests by ID, user, department, catalog item..."
+        searchKeys={['id', 'requestedBy', 'department', 'catalogItem', 'requestType', 'assignedEngineer']}
+        pageSize={15}
+        title="Active Service Requests Registry"
+        subtitle="End-user service requests, hardware deliveries, and access provisioning"
+        exportFilename="ncgr_service_requests"
+      />
     </div>
   );
 };

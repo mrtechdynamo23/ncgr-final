@@ -1,125 +1,199 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { masterApplications } from '../../data/master-applications';
-import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
-import { Search } from 'lucide-react';
+import { masterApplications, type ApplicationRecord } from '../../data/master-applications';
+import { useDataStore } from '../../data/mockDataStore';
+import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
+import type { MasterEmployee } from '../../data/master-employees';
 
 const ApplicationSupportPage: React.FC = () => {
-  const { t } = useTranslation('common');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const { employees } = useDataStore();
+  const [selectedEmployee, setSelectedEmployee] = useState<MasterEmployee | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredApps = masterApplications.filter(a =>
-    a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.supportTeam.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.itOwner.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const coverage24x7Count = masterApplications.filter(a => a.coverageType === '24x7').length;
+  const businessHoursCount = masterApplications.length - coverage24x7Count;
+
+  const handleOpenEmployee = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const emp = employees.find(e => e.name === name);
+    if (emp) {
+      setSelectedEmployee(emp);
+      setIsModalOpen(true);
+    }
+  };
+
+  const columns: ColumnDef<ApplicationRecord>[] = [
+    {
+      header: 'App ID',
+      accessorKey: 'id',
+      width: '110px',
+      cell: (row) => (
+        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+          {row.id}
+        </span>
+      ),
+    },
+    {
+      header: 'Application & Support Team',
+      accessorKey: 'name',
+      cell: (row) => (
+        <div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.name}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>
+            Support Team: {row.supportTeam}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'IT Owner Lead',
+      accessorKey: 'itOwner',
+      cell: (row) => (
+        <button
+          onClick={(e) => handleOpenEmployee(row.itOwner, e)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--ncgr-deep-blue, #074A76)',
+            fontWeight: 700,
+            fontSize: '0.8125rem',
+            cursor: 'pointer',
+            textAlign: 'left',
+            padding: 0,
+            textDecoration: 'underline',
+          }}
+          title="Click to view full employee profile"
+        >
+          {row.itOwner}
+        </button>
+      ),
+    },
+    {
+      header: 'Business Owner Lead',
+      accessorKey: 'businessOwner',
+      cell: (row) => (
+        <button
+          onClick={(e) => handleOpenEmployee(row.businessOwner, e)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#40904F',
+            fontWeight: 700,
+            fontSize: '0.8125rem',
+            cursor: 'pointer',
+            textAlign: 'left',
+            padding: 0,
+            textDecoration: 'underline',
+          }}
+          title="Click to view full employee profile"
+        >
+          {row.businessOwner}
+        </button>
+      ),
+    },
+    {
+      header: 'Support Window',
+      accessorKey: 'coverageType',
+      cell: (row) => (
+        <span
+          style={{
+            padding: '2px 8px',
+            borderRadius: 4,
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            background: row.coverageType === '24x7' ? '#E3FCEF' : '#E6F4FC',
+            color: row.coverageType === '24x7' ? '#22A06B' : '#074A76',
+          }}
+        >
+          {row.coverageType}
+        </span>
+      ),
+    },
+    {
+      header: 'Vendor Contract Scope',
+      accessorKey: 'vendor',
+      cell: (row) => (
+        <div>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{row.vendor}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>Support Tier: {row.l3Support}</div>
+        </div>
+      ),
+    },
+  ];
+
+  const uniqueSupportTeams = Array.from(new Set(masterApplications.map(a => a.supportTeam))).map(t => ({ label: t, value: t }));
+
+  const filters: FilterDef<ApplicationRecord>[] = [
+    { key: 'supportTeam', label: 'Support Teams', options: uniqueSupportTeams },
+    {
+      key: 'coverageType',
+      label: 'Support Windows',
+      options: [
+        { label: '24x7 Mission Critical', value: '24x7' },
+        { label: 'Business Hours', value: 'Business Hours' },
+      ],
+    },
+  ];
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Application Support Coverage & Ownership</h1>
-            <p className="page-subtitle">L1/L2/L3 Escalation Matrix, 24x7 Shift Coverage, Vendor Support Contracts & Coverage Gaps</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20 }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+          Application Support Coverage & Ownership
+        </h1>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          L1/L2/L3 support teams, 24x7 shift coverage windows, IT owner assignments, and business stakeholder accountability
+        </p>
+      </div>
+
+      {/* KPI Cards Strip */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gap: 12,
+          marginBottom: 20,
+        }}
+      >
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Supported Portfolio</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{masterApplications.length} Apps</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>100% Assigned L2/L3</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>24×7 Active Coverage</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{coverage24x7Count}</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Critical & High portals</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#074A76', textTransform: 'uppercase' }}>Business Hours Standard</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#074A76', marginTop: 4 }}>{businessHoursCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#074A76', marginTop: 2, fontWeight: 600 }}>Internal support tools</div>
         </div>
       </div>
 
-      {/* KPI Overview (Module 9 Spec) */}
-      <div className="kpi-grid" style={{ marginBottom: 24 }}>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#074A76' }} />
-          <div className="kpi-card-label">Applications Covered</div>
-          <div className="kpi-card-value">48</div>
-          <div className="kpi-card-trend neutral">100% L2 Coverage</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#40904F' }} />
-          <div className="kpi-card-label">24×7 Coverage</div>
-          <div className="kpi-card-value" style={{ color: '#40904F' }}>31</div>
-          <div className="kpi-card-trend up">Critical & High Portals</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#4AA6DC' }} />
-          <div className="kpi-card-label">Business Hours Support</div>
-          <div className="kpi-card-value">17</div>
-          <div className="kpi-card-trend neutral">Medium & Low Portals</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#671E75' }} />
-          <div className="kpi-card-label">L3 Coverage Level</div>
-          <div className="kpi-card-value">94%</div>
-          <div className="kpi-card-trend neutral">Vendor & Internal Experts</div>
-        </div>
-        <div className="kpi-card" style={{ cursor: 'default' }}>
-          <div className="kpi-card-accent" style={{ background: '#E97F0A' }} />
-          <div className="kpi-card-label">Coverage Gaps Identified</div>
-          <div className="kpi-card-value" style={{ color: '#E97F0A' }}>2</div>
-          <div className="kpi-card-trend down">Vendor L3 On-Call Backups</div>
-        </div>
-      </div>
+      {/* Main DataTable */}
+      <DataTable
+        data={masterApplications}
+        columns={columns}
+        filters={filters}
+        searchPlaceholder="Search support teams, IT owners, vendors, apps..."
+        searchKeys={['name', 'itOwner', 'businessOwner', 'supportTeam', 'vendor', 'id']}
+        pageSize={15}
+        title="Application Support Ownership Matrix"
+        subtitle="Click any owner name to open their complete profile, phone, and assignment history"
+        exportFilename="ncgr_app_support_coverage"
+      />
 
-      {/* Main Support Coverage Table (Module 9 Spec) */}
-      <div className="card">
-        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">Application Support Matrix & Escalation Roster</h2>
-          <div className="header-search" style={{ width: 280 }}>
-            <Search size={16} className="header-search-icon" />
-            <input
-              type="text"
-              placeholder="Search app or support team..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="data-table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>App ID</th>
-                <th>Application Name</th>
-                <th>L1 Support</th>
-                <th>L2 Support Team</th>
-                <th>L3 Support Team</th>
-                <th>On-Call Status</th>
-                <th>Vendor Support</th>
-                <th>Coverage Window</th>
-                <th>IT Lead Owner</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApps.slice(0, 15).map((a) => (
-                <tr key={a.id} onClick={() => setSelectedAppId(a.id)} style={{ cursor: 'pointer' }}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ncgr-deep-sky)' }}>{a.id}</td>
-                  <td style={{ fontWeight: 600, fontSize: '0.8125rem', color: 'var(--ncgr-deep-blue)' }}>{a.name}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{a.l1Support}</td>
-                  <td style={{ fontSize: '0.75rem', fontWeight: 600 }}>{a.l2Support}</td>
-                  <td style={{ fontSize: '0.75rem' }}>{a.l3Support}</td>
-                  <td>
-                    <span className={`health-badge ${a.onCallAvailable ? 'healthy' : 'info'}`}>
-                      {a.onCallAvailable ? 'Active On-Call' : 'Standby'}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem' }}>{a.vendorSupport ? `Yes (${a.vendor})` : 'No (Internal)'}</td>
-                  <td>
-                    <span className={`health-badge ${a.coverageType === '24x7' ? 'healthy' : 'info'}`}>
-                      {a.coverageType}
-                    </span>
-                  </td>
-                  <td style={{ fontSize: '0.75rem' }}>{a.itOwner}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <ApplicationDetailModal appId={selectedAppId} onClose={() => setSelectedAppId(null)} />
+      {/* Employee Detail Modal */}
+      <EmployeeDetailModal
+        employee={selectedEmployee}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

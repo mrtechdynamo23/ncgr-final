@@ -3,14 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import NCGRLogo from '../common/NCGRLogo';
 import {
-  LayoutDashboard, ClipboardList, Ticket, Layers, Cpu,
-  Server, Building2, FolderKanban, UserPlus, UsersRound,
-  Rocket, BarChart3, DollarSign, ShieldCheck, Gauge, ChevronRight,
-  ChevronDown, Users, Clock, ClipboardCheck, ArrowRightLeft,
+  LayoutDashboard, Users, Clock, ClipboardCheck, ArrowRightLeft,
   MessageSquare, CalendarDays, UserCheck, Phone, AlertTriangle,
   FileText, GitBranch, FileCheck, Activity, Network, Database,
-  Container, Cloud, Monitor, Settings, Shield, Bot, Lightbulb,
-  TrendingUp, BookOpen, FileSpreadsheet, CheckCircle2, AlertCircle
+  Container, Cloud, Monitor, Settings, Shield, Bot,
+  BookOpen, CheckCircle2, AlertCircle,
+  Building2, FolderKanban, ShieldCheck, Gauge, Layers, Cpu, Server,
+  ChevronDown, ChevronRight, KeyRound
 } from 'lucide-react';
 
 export interface NavChildItem {
@@ -30,46 +29,55 @@ export interface NavParentTile {
   children?: NavChildItem[];
 }
 
-// ─── MASTER SIDEBAR PARENT TILES (NO DUPLICATE PARENT/CHILD NAMES) ───
+// ─── FINAL MASTER NAVIGATION STRUCTURE (13 PARENT TILES) ───
 export const sidebarParentTiles: NavParentTile[] = [
   {
-    id: 'command-centre',
-    labelKey: 'nav.commandCentre',
-    defaultLabel: 'Operations Command Centre',
+    id: 'executive-dashboard',
+    labelKey: 'nav.executiveDashboard',
+    defaultLabel: 'Executive Dashboard',
     icon: <LayoutDashboard size={18} />,
     defaultPath: '/',
   },
   {
-    id: 'operational-services',
-    labelKey: 'nav.operationalServices',
-    defaultLabel: 'Operational Services',
-    icon: <ClipboardList size={18} />,
-    defaultPath: '/operations',
+    id: 'team-overview',
+    labelKey: 'nav.teamOverview',
+    defaultLabel: 'Team Overview',
+    icon: <Users size={18} />,
+    defaultPath: '/team-overview/resource-data',
     children: [
-      { id: 'resource-roster', labelKey: 'nav.resourceRoster', defaultLabel: 'Resource Roster', icon: <Users size={16} />, path: '/operations/resource-roster' },
-      { id: 'shift-roster', labelKey: 'nav.shiftRoster', defaultLabel: 'Shift Roster', icon: <Clock size={16} />, path: '/operations/shift-roster' },
-      { id: 'activity-checklist', labelKey: 'nav.activityChecklist', defaultLabel: 'Activity Checklist', icon: <ClipboardCheck size={16} />, path: '/operations/activity-checklist' },
-      { id: 'handover-logs', labelKey: 'nav.handoverLogs', defaultLabel: 'Handover Logs', icon: <ArrowRightLeft size={16} />, path: '/operations/handover-logs' },
-      { id: 'operations-mom', labelKey: 'nav.operationsMOM', defaultLabel: 'Operations MOM & Action Tracker', icon: <MessageSquare size={16} />, path: '/operations/mom' },
-      { id: 'leave-management', labelKey: 'nav.leaveManagement', defaultLabel: 'Leave Management', icon: <CalendarDays size={16} />, path: '/operations/leave' },
-      { id: 'attendance', labelKey: 'nav.attendance', defaultLabel: 'Attendance', icon: <UserCheck size={16} />, path: '/operations/attendance' },
-      { id: 'contact-directory', labelKey: 'nav.contactDirectory', defaultLabel: 'Contact Directory', icon: <Phone size={16} />, path: '/operations/contacts' },
+      { id: 'resource-data', labelKey: 'nav.resourceData', defaultLabel: 'Resource Data', icon: <Users size={16} />, path: '/team-overview/resource-data' },
+      { id: 'team-structure', labelKey: 'nav.teamStructure', defaultLabel: 'Team Structure', icon: <Layers size={16} />, path: '/team-overview/team-structure' },
+      { id: 'contact-directory', labelKey: 'nav.contactDirectory', defaultLabel: 'Contact Directory', icon: <Phone size={16} />, path: '/team-overview/contacts' },
+      { id: 'leave-management', labelKey: 'nav.leaveManagement', defaultLabel: 'Leave Management', icon: <CalendarDays size={16} />, path: '/team-overview/leave' },
+      { id: 'attendance', labelKey: 'nav.attendance', defaultLabel: 'Attendance', icon: <UserCheck size={16} />, path: '/team-overview/attendance' },
     ],
   },
   {
-    id: 'service-operations',
-    labelKey: 'nav.serviceOperations',
-    defaultLabel: 'Service Operations',
-    icon: <Ticket size={18} />,
-    defaultPath: '/service-management/critical-incidents',
+    id: 'shift-operations',
+    labelKey: 'nav.shiftOperationsLog',
+    defaultLabel: 'Shift Operations Log',
+    icon: <Clock size={18} />,
+    defaultPath: '/shift-operations/activity-checklist',
     children: [
-      { id: 'incident-mgmt', labelKey: 'nav.criticalIncidents', defaultLabel: 'Incident Management', icon: <AlertTriangle size={16} />, path: '/service-management/critical-incidents' },
-      { id: 'service-requests', labelKey: 'nav.serviceRequests', defaultLabel: 'Service Request Management', icon: <FileText size={16} />, path: '/service-management/service-requests' },
-      { id: 'change-release', labelKey: 'nav.changeRelease', defaultLabel: 'Change Management', icon: <GitBranch size={16} />, path: '/service-management/changes' },
-      { id: 'major-problems', labelKey: 'nav.majorProblems', defaultLabel: 'Problem Management', icon: <AlertCircle size={16} />, path: '/service-management/problems' },
-      { id: 'knowledge-mgmt', labelKey: 'nav.knowledgeBase', defaultLabel: 'Knowledge Management', icon: <BookOpen size={16} />, path: '/knowledge' },
-      { id: 'operational-rca', labelKey: 'nav.operationalRCA', defaultLabel: 'Critical Operations', icon: <FileCheck size={16} />, path: '/service-management/rca' },
-      { id: 'service-desk-overview', labelKey: 'nav.serviceDeskOverview', defaultLabel: 'Service Operations Overview', icon: <Ticket size={16} />, path: '/service-management/service-desk' },
+      { id: 'activity-checklist', labelKey: 'nav.activityChecklist', defaultLabel: 'Activity Checklist', icon: <ClipboardCheck size={16} />, path: '/shift-operations/activity-checklist' },
+      { id: 'handover-logs', labelKey: 'nav.handoverLogs', defaultLabel: 'Handover Logs', icon: <ArrowRightLeft size={16} />, path: '/shift-operations/handover-logs' },
+      { id: 'operations-mom', labelKey: 'nav.operationsMOM', defaultLabel: 'Operations MOM & Action Tracker', icon: <MessageSquare size={16} />, path: '/shift-operations/mom' },
+    ],
+  },
+  {
+    id: 'command-center',
+    labelKey: 'nav.commandCenter',
+    defaultLabel: 'Command Center',
+    icon: <Activity size={18} />,
+    defaultPath: '/command-center/service-desk',
+    children: [
+      { id: 'service-desk-overview', labelKey: 'nav.serviceDeskOverview', defaultLabel: 'Service Desk Overview', icon: <Monitor size={16} />, path: '/command-center/service-desk' },
+      { id: 'all-incidents', labelKey: 'nav.incidents', defaultLabel: 'Incidents', icon: <AlertCircle size={16} />, path: '/command-center/incidents' },
+      { id: 'critical-incidents', labelKey: 'nav.criticalIncidents', defaultLabel: 'Critical Incidents', icon: <AlertTriangle size={16} />, path: '/command-center/critical-incidents' },
+      { id: 'service-requests', labelKey: 'nav.serviceRequests', defaultLabel: 'Service Request', icon: <FileText size={16} />, path: '/command-center/service-requests' },
+      { id: 'major-problems', labelKey: 'nav.majorProblems', defaultLabel: 'Major Problems', icon: <AlertCircle size={16} />, path: '/command-center/problems' },
+      { id: 'operational-rca', labelKey: 'nav.operationalRCA', defaultLabel: 'Operational RCA', icon: <FileCheck size={16} />, path: '/command-center/rca' },
+      { id: 'knowledge-base', labelKey: 'nav.knowledgeBase', defaultLabel: 'Knowledge Base Repository', icon: <BookOpen size={16} />, path: '/command-center/knowledge' },
     ],
   },
   {
@@ -77,13 +85,11 @@ export const sidebarParentTiles: NavParentTile[] = [
     labelKey: 'nav.applicationServices',
     defaultLabel: 'Application Services',
     icon: <Layers size={18} />,
-    defaultPath: '/applications',
+    defaultPath: '/applications/health',
     children: [
       { id: 'app-health', labelKey: 'nav.applicationHealth', defaultLabel: 'Application Health', icon: <Activity size={16} />, path: '/applications/health' },
       { id: 'business-service-health', labelKey: 'nav.businessServiceHealth', defaultLabel: 'Business Service Health', icon: <CheckCircle2 size={16} />, path: '/applications/business-service-health' },
-      { id: 'app-portfolio', labelKey: 'nav.applicationPortfolio', defaultLabel: 'Application Portfolio', icon: <Layers size={16} />, path: '/applications/portfolio' },
       { id: 'app-incidents', labelKey: 'nav.applicationIncidents', defaultLabel: 'Application Incidents', icon: <AlertTriangle size={16} />, path: '/applications/incidents' },
-      { id: 'app-problems', labelKey: 'nav.applicationProblemsRCA', defaultLabel: 'Application Problems & RCA', icon: <FileCheck size={16} />, path: '/applications/problems' },
       { id: 'app-changes', labelKey: 'nav.applicationChangesReleases', defaultLabel: 'Application Changes & Releases', icon: <GitBranch size={16} />, path: '/applications/changes' },
       { id: 'app-dependencies', labelKey: 'nav.applicationDependencies', defaultLabel: 'Application Dependencies', icon: <Network size={16} />, path: '/applications/dependencies' },
       { id: 'app-performance', labelKey: 'nav.applicationPerformance', defaultLabel: 'Application Performance', icon: <Monitor size={16} />, path: '/applications/performance' },
@@ -91,11 +97,11 @@ export const sidebarParentTiles: NavParentTile[] = [
     ],
   },
   {
-    id: 'technology-estate',
-    labelKey: 'nav.technologyEstate',
-    defaultLabel: 'Technology Estate',
+    id: 'it-support-tools',
+    labelKey: 'nav.itSupportToolManagement',
+    defaultLabel: 'IT Support Tool Management',
     icon: <Cpu size={18} />,
-    defaultPath: '/technology/estate',
+    defaultPath: '/technology/servicenow',
     children: [
       { id: 'servicenow-health', labelKey: 'nav.serviceNowHealth', defaultLabel: 'ServiceNow Health', icon: <Settings size={16} />, path: '/technology/servicenow' },
       { id: 'monitoring', labelKey: 'nav.monitoringObservability', defaultLabel: 'Monitoring & Observability', icon: <Activity size={16} />, path: '/technology/monitoring' },
@@ -103,21 +109,28 @@ export const sidebarParentTiles: NavParentTile[] = [
       { id: 'security-tech', labelKey: 'nav.securityTechnology', defaultLabel: 'Security Technology', icon: <Shield size={16} />, path: '/technology/security' },
       { id: 'microsoft-estate', labelKey: 'nav.microsoftEstate', defaultLabel: 'Microsoft Estate', icon: <Monitor size={16} />, path: '/technology/microsoft' },
       { id: 'cloud-platforms', labelKey: 'nav.cloudPlatforms', defaultLabel: 'Cloud Platforms', icon: <Cloud size={16} />, path: '/technology/cloud-platforms' },
-      { id: 'license-health', labelKey: 'nav.licenseEntitlement', defaultLabel: 'License & Entitlement Health', icon: <FileCheck size={16} />, path: '/technology/licenses' },
     ],
+  },
+  {
+    id: 'license-health',
+    labelKey: 'nav.licenseEntitlementHealth',
+    defaultLabel: 'License & Entitlement Health',
+    icon: <KeyRound size={18} />,
+    defaultPath: '/license-health',
   },
   {
     id: 'infrastructure-health',
     labelKey: 'nav.infrastructureHealth',
     defaultLabel: 'Infrastructure Health',
     icon: <Server size={18} />,
-    defaultPath: '/applications/infrastructure',
+    defaultPath: '/infrastructure/overview',
     children: [
-      { id: 'infra-overview', labelKey: 'nav.infrastructureOverview', defaultLabel: 'Infrastructure Overview', icon: <Server size={16} />, path: '/applications/infrastructure' },
-      { id: 'network-health', labelKey: 'nav.networkHealth', defaultLabel: 'Network Health', icon: <Network size={16} />, path: '/applications/network' },
-      { id: 'database-health', labelKey: 'nav.databaseHealth', defaultLabel: 'Database Health', icon: <Database size={16} />, path: '/applications/database' },
-      { id: 'container-health', labelKey: 'nav.containerPlatformHealth', defaultLabel: 'Container Platform Health', icon: <Container size={16} />, path: '/applications/containers' },
-      { id: 'digital-workplace', labelKey: 'nav.digitalWorkplace', defaultLabel: 'Digital Workplace', icon: <Monitor size={16} />, path: '/applications/digital-workplace' },
+      { id: 'infra-overview', labelKey: 'nav.infrastructureOverview', defaultLabel: 'Infrastructure Health', icon: <Server size={16} />, path: '/infrastructure/overview' },
+      { id: 'network-health', labelKey: 'nav.networkHealth', defaultLabel: 'Network Health', icon: <Network size={16} />, path: '/infrastructure/network' },
+      { id: 'database-health', labelKey: 'nav.databaseHealth', defaultLabel: 'Database Health', icon: <Database size={16} />, path: '/infrastructure/database' },
+      { id: 'vm-health', labelKey: 'nav.vmHealth', defaultLabel: 'VM Health', icon: <Container size={16} />, path: '/infrastructure/vm' },
+      { id: 'cloud-health', labelKey: 'nav.cloudHealth', defaultLabel: 'Cloud Health', icon: <Cloud size={16} />, path: '/infrastructure/cloud' },
+      { id: 'digital-workplace', labelKey: 'nav.digitalWorkplace', defaultLabel: 'Digital Workplace', icon: <Monitor size={16} />, path: '/infrastructure/digital-workplace' },
     ],
   },
   {
@@ -125,14 +138,12 @@ export const sidebarParentTiles: NavParentTile[] = [
     labelKey: 'nav.vendorSIAM',
     defaultLabel: 'Vendor & SIAM',
     icon: <Building2 size={18} />,
-    defaultPath: '/governance/vendors',
+    defaultPath: '/vendor-siam/performance',
     children: [
-      { id: 'vendor-perf', labelKey: 'nav.vendorPerformance', defaultLabel: 'Vendor Performance', icon: <Building2 size={16} />, path: '/governance/vendors' },
-      { id: 'vendor-contracts', labelKey: 'nav.vendorContracts', defaultLabel: 'Vendor Contracts', icon: <FileText size={16} />, path: '/governance/vendors' },
-      { id: 'siam-overview', labelKey: 'nav.siamOverview', defaultLabel: 'SIAM Overview', icon: <Layers size={16} />, path: '/governance/vendors' },
-      { id: 'vendor-sla', labelKey: 'nav.vendorSLA', defaultLabel: 'Vendor SLA', icon: <Gauge size={16} />, path: '/governance/vendors' },
-      { id: 'vendor-risks', labelKey: 'nav.vendorRisks', defaultLabel: 'Vendor Risks', icon: <AlertTriangle size={16} />, path: '/governance/risks' },
-      { id: 'vendor-actions', labelKey: 'nav.vendorActions', defaultLabel: 'Vendor Actions', icon: <ClipboardCheck size={16} />, path: '/governance/vendors' },
+      { id: 'vendor-perf', labelKey: 'nav.vendorPerformance', defaultLabel: 'Vendor Performance', icon: <Building2 size={16} />, path: '/vendor-siam/performance' },
+      { id: 'vendor-sla', labelKey: 'nav.vendorServiceSLA', defaultLabel: 'Vendor Service SLA', icon: <Gauge size={16} />, path: '/vendor-siam/sla' },
+      { id: 'vendor-risks', labelKey: 'nav.vendorRisk', defaultLabel: 'Vendor Risk', icon: <AlertTriangle size={16} />, path: '/vendor-siam/risk' },
+      { id: 'vendor-actions', labelKey: 'nav.vendorActions', defaultLabel: 'Vendor Actions', icon: <ClipboardCheck size={16} />, path: '/vendor-siam/actions' },
     ],
   },
   {
@@ -140,89 +151,28 @@ export const sidebarParentTiles: NavParentTile[] = [
     labelKey: 'nav.programManagement',
     defaultLabel: 'Program Management',
     icon: <FolderKanban size={18} />,
-    defaultPath: '/governance/programs',
+    defaultPath: '/program-management/overview',
     children: [
-      { id: 'program-overview', labelKey: 'nav.programOverview', defaultLabel: 'Program Overview', icon: <FolderKanban size={16} />, path: '/governance/programs' },
-      { id: 'issues-actions', labelKey: 'nav.issuesActions', defaultLabel: 'Issues & Actions', icon: <ClipboardCheck size={16} />, path: '/governance/approvals' },
-      { id: 'risk-mgmt', labelKey: 'nav.riskManagement', defaultLabel: 'Risk Management', icon: <AlertTriangle size={16} />, path: '/governance/risks' },
-      { id: 'milestones', labelKey: 'nav.milestones', defaultLabel: 'Milestones', icon: <CheckCircle2 size={16} />, path: '/governance/programs' },
-      { id: 'dependencies', labelKey: 'nav.dependencies', defaultLabel: 'Dependencies', icon: <Network size={16} />, path: '/governance/programs' },
-      { id: 'itms-reports', labelKey: 'nav.itmsReports', defaultLabel: 'ITMS WSR / MSR / DFR', icon: <FileSpreadsheet size={16} />, path: '/reporting/wsr' },
-    ],
-  },
-  {
-    id: 'resource-mobilization',
-    labelKey: 'nav.resourceMobilization',
-    defaultLabel: 'Resource Mobilization',
-    icon: <UserPlus size={18} />,
-    defaultPath: '/governance/resource-mobilization',
-    children: [
-      { id: 'mobilization-status', labelKey: 'nav.mobilizationStatus', defaultLabel: 'Mobilization Status', icon: <UserPlus size={16} />, path: '/governance/resource-mobilization' },
-      { id: 'demand-capacity', labelKey: 'nav.demandCapacity', defaultLabel: 'Demand vs Capacity', icon: <BarChart3 size={16} />, path: '/governance/resource-mobilization' },
-      { id: 'open-positions', labelKey: 'nav.openPositions', defaultLabel: 'Open Positions', icon: <Users size={16} />, path: '/governance/resource-mobilization' },
-      { id: 'onboarding-offboarding', labelKey: 'nav.onboardingOffboarding', defaultLabel: 'Onboarding & Offboarding', icon: <UserCheck size={16} />, path: '/governance/resource-mobilization' },
-      { id: 'replacement-kt', labelKey: 'nav.replacementKT', defaultLabel: 'Replacement & KT', icon: <ArrowRightLeft size={16} />, path: '/governance/resource-mobilization' },
-    ],
-  },
-  {
-    id: 'team-structure',
-    labelKey: 'nav.teamStructure',
-    defaultLabel: 'Team Structure',
-    icon: <UsersRound size={18} />,
-    defaultPath: '/governance/team-structure',
-    children: [
-      { id: 'org-structure', labelKey: 'nav.orgStructure', defaultLabel: 'Organization Structure', icon: <UsersRound size={16} />, path: '/governance/team-structure' },
-      { id: 'tower-structure', labelKey: 'nav.towerStructure', defaultLabel: 'Tower Structure', icon: <Layers size={16} />, path: '/governance/team-structure' },
-      { id: 'roles-responsibilities', labelKey: 'nav.rolesResponsibilities', defaultLabel: 'Roles & Responsibilities', icon: <FileText size={16} />, path: '/governance/team-structure' },
-      { id: 'resource-distribution', labelKey: 'nav.resourceDistribution', defaultLabel: 'Resource Distribution', icon: <BarChart3 size={16} />, path: '/governance/team-structure' },
-      { id: 'contact-directory-team', labelKey: 'nav.contactDirectory', defaultLabel: 'Contact Directory', icon: <Phone size={16} />, path: '/operations/contacts' },
+      { id: 'program-overview', labelKey: 'nav.programOverview', defaultLabel: 'Program Overview', icon: <FolderKanban size={16} />, path: '/program-management/overview' },
+      { id: 'milestones', labelKey: 'nav.milestones', defaultLabel: 'Milestones', icon: <CheckCircle2 size={16} />, path: '/program-management/milestones' },
+      { id: 'dependencies', labelKey: 'nav.dependencies', defaultLabel: 'Dependencies', icon: <Network size={16} />, path: '/program-management/dependencies' },
+      { id: 'issues-actions', labelKey: 'nav.issuesActions', defaultLabel: 'Issues & Actions', icon: <ClipboardCheck size={16} />, path: '/program-management/issues-actions' },
+      { id: 'resource-mobilisation', labelKey: 'nav.resourceMobilisation', defaultLabel: 'Resource Mobilisation', icon: <Users size={16} />, path: '/program-management/resource-mobilisation' },
     ],
   },
   {
     id: 'digital-transformation',
-    labelKey: 'nav.digitalTransformation',
+    labelKey: 'nav.digitalTransformationAI',
     defaultLabel: 'Digital Transformation & AI',
-    icon: <Rocket size={18} />,
-    defaultPath: '/transformation/automation',
-    children: [
-      { id: 'automation-initiatives', labelKey: 'nav.automationInitiatives', defaultLabel: 'Automation Initiatives', icon: <Bot size={16} />, path: '/transformation/automation' },
-      { id: 'ai-initiatives', labelKey: 'nav.aiInitiatives', defaultLabel: 'AI Initiatives', icon: <Lightbulb size={16} />, path: '/transformation/ai' },
-      { id: 'benefits-tracking', labelKey: 'nav.benefitsTracking', defaultLabel: 'Benefits Tracking', icon: <TrendingUp size={16} />, path: '/transformation/benefits' },
-      { id: 'innovation-pipeline', labelKey: 'nav.innovationPipeline', defaultLabel: 'Innovation Pipeline', icon: <Rocket size={16} />, path: '/transformation/innovation' },
-    ],
-  },
-  {
-    id: 'management-reporting',
-    labelKey: 'nav.managementReporting',
-    defaultLabel: 'Management Reporting',
-    icon: <BarChart3 size={18} />,
-    defaultPath: '/reporting/wsr',
-    children: [
-      { id: 'wsr', labelKey: 'nav.weeklyStatusReport', defaultLabel: 'Weekly Status Report', icon: <FileText size={16} />, path: '/reporting/wsr' },
-      { id: 'msr', labelKey: 'nav.monthlyServiceReport', defaultLabel: 'Monthly Service Report', icon: <FileSpreadsheet size={16} />, path: '/reporting/msr' },
-      { id: 'executive-report', labelKey: 'nav.executiveReport', defaultLabel: 'Executive Report', icon: <BarChart3 size={16} />, path: '/reporting/executive' },
-      { id: 'ai-analytics', labelKey: 'nav.aiAnalytics', defaultLabel: 'AI Analytics', icon: <Lightbulb size={16} />, path: '/reporting/ai-analytics' },
-    ],
-  },
-  {
-    id: 'finops',
-    labelKey: 'nav.finopsCloudEconomics',
-    defaultLabel: 'FinOps & Cloud Economics',
-    icon: <DollarSign size={18} />,
-    defaultPath: '/finops',
-    children: [
-      { id: 'cloud-spend', labelKey: 'nav.cloudSpend', defaultLabel: 'Cloud Spend', icon: <DollarSign size={16} />, path: '/finops' },
-    ],
+    icon: <Bot size={18} />,
+    defaultPath: '/transformation',
   },
   {
     id: 'audit-compliance',
     labelKey: 'nav.auditCompliance',
     defaultLabel: 'Audit & Compliance',
     icon: <ShieldCheck size={18} />,
-    defaultPath: '/compliance/status',
-    children: [
-      { id: 'compliance-status', labelKey: 'nav.complianceStatus', defaultLabel: 'Compliance Status', icon: <ShieldCheck size={16} />, path: '/compliance/status' },
-    ],
+    defaultPath: '/compliance',
   },
   {
     id: 'sla-assurance',
@@ -245,8 +195,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, onMobileClose 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Track expanded parent tiles. Default open 'operational-services'.
-  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['operational-services']));
+  // Track expanded parent tiles.
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set(['team-overview']));
 
   const toggleParent = (id: string, defaultPath?: string) => {
     setExpandedParents((prev) => {
@@ -271,12 +221,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, onMobileClose 
 
   const isChildActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   const isParentActive = (tile: NavParentTile) => {
     if (tile.defaultPath && tile.defaultPath === '/' && location.pathname === '/') return true;
-    if (tile.defaultPath && tile.defaultPath !== '/' && location.pathname.startsWith(tile.defaultPath)) return true;
+    if (tile.defaultPath && tile.defaultPath !== '/' && location.pathname === tile.defaultPath) return true;
     if (tile.children) {
       return tile.children.some((c) => isChildActive(c.path));
     }
@@ -297,7 +247,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, onMobileClose 
           <NCGRLogo height={32} variant={collapsed ? 'icon-only' : 'full'} />
         </div>
 
-        {/* SINGLE-LINE PARENT NAVIGATION LIST (NO SECTION HEADINGS & NO DUPLICATE CHILD NAMES) */}
+        {/* SINGLE-LINE PARENT NAVIGATION LIST (FLAT TILES WITH ACCORDION CHILDREN) */}
         <nav className="sidebar-nav" role="navigation" aria-label="Portal Navigation">
           {sidebarParentTiles.map((tile) => {
             const isExpanded = expandedParents.has(tile.id);
@@ -331,10 +281,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, onMobileClose 
                   <div className="sidebar-children-list">
                     {tile.children!.map((child) => {
                       const childActive = isChildActive(child.path);
+                      const label = getLabel(child.labelKey, child.defaultLabel);
                       return (
                         <button
                           key={child.id}
                           className={`sidebar-child-item ${childActive ? 'active' : ''}`}
+                          title={label}
                           onClick={() => {
                             try {
                               navigate(child.path);
@@ -345,7 +297,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, onMobileClose 
                           }}
                         >
                           {child.icon && <span className="sidebar-child-icon">{child.icon}</span>}
-                          <span>{getLabel(child.labelKey, child.defaultLabel)}</span>
+                          <span className="sidebar-child-label">{label}</span>
                         </button>
                       );
                     })}

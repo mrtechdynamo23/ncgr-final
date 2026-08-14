@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import NCGRLogo from '../components/common/NCGRLogo';
 import { ShieldCheck, Lock, ArrowRight, AlertCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -62,13 +63,11 @@ const LoginPage: React.FC = () => {
             borderBottom: '1px solid #E2E8F0',
           }}
         >
-          <img
-            src="/NCGR Logo.png"
-            alt="NCGR Logo"
-            style={{ height: 64, objectFit: 'contain', margin: '0 auto 16px', display: 'block' }}
-          />
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <NCGRLogo height={48} variant="full" />
+          </div>
           <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#074A76', margin: 0, letterSpacing: '-0.01em' }}>
-            NCGR ITMS Operations Command Centre
+            NCGR ITMS Executive Dashboard
           </h1>
           <p style={{ fontSize: '0.8125rem', color: '#64748B', marginTop: 6, margin: '6px 0 0' }}>
             Enterprise Operational Assurance & Management Portal

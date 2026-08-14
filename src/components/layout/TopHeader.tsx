@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../providers/ThemeProvider';
 import { useLanguageDirection } from '../../hooks/useLanguageDirection';
 import { useAuth } from '../../context/AuthContext';
+import { useDataStore } from '../../data/mockDataStore';
 import {
   Search, Bell, Sun, Moon, Languages, Menu,
   PanelLeftClose, PanelLeftOpen, LogOut
@@ -27,6 +28,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguageDirection();
   const { logout } = useAuth();
+  const { unreadNotificationCount } = useDataStore();
 
   return (
     <header className="app-header" role="banner">
@@ -97,9 +99,33 @@ const TopHeader: React.FC<TopHeaderProps> = ({
           onClick={onOpenNotifications}
           aria-label="Notifications"
           id="notifications-btn"
+          style={{ position: 'relative' }}
         >
           <Bell size={18} />
-          <span className="badge" />
+          {unreadNotificationCount > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: 4,
+                right: 4,
+                minWidth: 16,
+                height: 16,
+                padding: '0 4px',
+                borderRadius: 8,
+                background: '#DE350B',
+                color: '#FFFFFF',
+                fontSize: '0.625rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                lineHeight: 1,
+                border: '2px solid var(--header-bg, #FFFFFF)',
+              }}
+            >
+              {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+            </span>
+          )}
         </button>
 
         {/* Lock / Logout Button */}
