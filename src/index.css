@@ -293,6 +293,159 @@ input, select, textarea {
   padding: 24px;
 }
 
+/* ─── FLUID PAGE TRANSITIONS & BACK NAVIGATION ANIMATIONS ─── */
+@keyframes fluidPageFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.998);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.app-page-fluid-wrapper {
+  animation: fluidPageFadeIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+  width: 100%;
+}
+
+.page-container {
+  animation: fluidPageFadeIn 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+/* Sub-page Navigation & Breadcrumb Fluidity */
+.subpage-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--card-bg, #FFFFFF);
+  border: 1px solid var(--border, #E4E7EC);
+  color: var(--ncgr-deep-blue, #074A76);
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.subpage-back-btn .back-arrow-icon {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.subpage-back-btn:hover {
+  background: #E6F4FC;
+  border-color: var(--ncgr-deep-sky, #4AA6DC);
+  color: var(--ncgr-deep-blue, #074A76);
+  transform: translateX(-3px);
+  box-shadow: 0 3px 10px rgba(7, 74, 118, 0.12);
+}
+
+.subpage-back-btn:hover .back-arrow-icon {
+  transform: translateX(-3px);
+}
+
+[dir="rtl"] .subpage-back-btn:hover {
+  transform: translateX(3px);
+}
+
+[dir="rtl"] .subpage-back-btn:hover .back-arrow-icon {
+  transform: translateX(3px);
+}
+
+.subpage-tab-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #E4E7EC);
+  background: var(--card-bg, #FFFFFF);
+  color: var(--text-secondary, #475467);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.subpage-tab-btn:hover {
+  border-color: var(--ncgr-deep-sky, #4AA6DC);
+  color: var(--ncgr-deep-blue, #074A76);
+  background: var(--bg-secondary, #F8FAFC);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(7, 74, 118, 0.08);
+}
+
+.subpage-tab-btn.active {
+  border-color: var(--ncgr-deep-blue, #074A76);
+  background: var(--ncgr-deep-blue, #074A76);
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 3px 12px rgba(7, 74, 118, 0.28);
+  transform: translateY(0);
+}
+
+.subpage-tab-btn.active:hover {
+  background: #053b5e;
+  border-color: #053b5e;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(7, 74, 118, 0.35);
+}
+
+/* Module Landing Hub Sub-tile Cards Animation & Fluidity */
+@keyframes subtileEntranceAnim {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.subtile-card {
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+  will-change: transform, box-shadow, border-color;
+}
+
+.subtile-entrance {
+  animation: subtileEntranceAnim 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.subtile-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: var(--ncgr-deep-sky, #4AA6DC) !important;
+  box-shadow: 0 8px 24px rgba(7, 74, 118, 0.12) !important;
+}
+
+.subtile-card:active {
+  transform: translateY(-1px) scale(0.99) !important;
+}
+
+.subtile-card:hover .subtile-icon-wrapper {
+  transform: scale(1.08);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.subtile-card:hover .subtile-arrow-icon {
+  transform: translateX(4px);
+  color: var(--ncgr-deep-sky, #4AA6DC);
+  transition: all 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[dir="rtl"] .subtile-card:hover .subtile-arrow-icon {
+  transform: translateX(-4px);
+}
+
 /* ─── SIDEBAR COMPONENTS ────────────────────────────────────── */
 .sidebar-logo {
   padding: 14px 18px;

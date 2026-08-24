@@ -45,24 +45,12 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem' }}>
           <button
+            type="button"
             onClick={() => navigate(modulePath)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '5px 10px',
-              borderRadius: 6,
-              background: 'var(--bg-secondary, #F1F5F9)',
-              border: '1px solid var(--border, #E4E7EC)',
-              color: 'var(--ncgr-deep-blue, #074A76)',
-              fontWeight: 700,
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease',
-            }}
+            className="subpage-back-btn"
             title={`Return to ${moduleTitle} landing page`}
           >
-            <ArrowLeft size={13} />
+            <ArrowLeft size={13} className="back-arrow-icon" />
             <span>Back to {moduleTitle}</span>
           </button>
 
@@ -70,7 +58,9 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
 
           <span
             onClick={() => navigate(modulePath)}
-            style={{ color: 'var(--text-secondary, #475467)', cursor: 'pointer', fontWeight: 600 }}
+            style={{ color: 'var(--text-secondary, #475467)', cursor: 'pointer', fontWeight: 600, transition: 'color 0.15s ease' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--ncgr-deep-blue, #074A76)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary, #475467)'; }}
           >
             {moduleTitle}
           </span>
@@ -87,11 +77,11 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
 
       {/* Main Page Title Header */}
       <div style={{ marginBottom: siblingPages.length > 0 ? 14 : 0 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
           {pageTitle}
         </h1>
         {pageSubtitle && (
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0, lineHeight: 1.5 }}>
             {pageSubtitle}
           </p>
         )}
@@ -102,10 +92,10 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
         <div
           style={{
             display: 'flex',
-            gap: 6,
+            gap: 8,
             flexWrap: 'wrap',
             alignItems: 'center',
-            paddingBottom: 8,
+            paddingBottom: 10,
             borderBottom: '1px solid var(--border, #E4E7EC)',
           }}
           className="subpage-nav-strip"
@@ -117,23 +107,9 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
             return (
               <button
                 key={sibling.id}
+                type="button"
                 onClick={() => navigate(sibling.path)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  border: isActive ? '1px solid var(--ncgr-deep-blue, #074A76)' : '1px solid var(--border, #E4E7EC)',
-                  background: isActive ? 'var(--ncgr-deep-blue, #074A76)' : 'var(--card-bg, #FFFFFF)',
-                  color: isActive ? '#FFFFFF' : 'var(--text-secondary, #475467)',
-                  fontWeight: isActive ? 700 : 600,
-                  fontSize: '0.8125rem',
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.15s ease',
-                  flexShrink: 0,
-                }}
+                className={`subpage-tab-btn ${isActive ? 'active' : ''}`}
               >
                 {sibling.icon && <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>{sibling.icon}</span>}
                 <span>{sibling.title}</span>
@@ -145,6 +121,7 @@ export const SubPageHeader: React.FC<SubPageHeaderProps> = ({
                       borderRadius: 10,
                       background: isActive ? 'rgba(255,255,255,0.25)' : 'var(--bg-secondary, #F1F5F9)',
                       color: isActive ? '#FFFFFF' : 'var(--text-secondary, #475467)',
+                      fontWeight: 700,
                     }}
                   >
                     {sibling.badge}

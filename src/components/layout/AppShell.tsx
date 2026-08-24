@@ -13,13 +13,11 @@ const AppShell: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [customerCornerOpen, setCustomerCornerOpen] = useState(false);
-  const [contentEnter, setContentEnter] = useState(false);
 
   const location = useLocation();
   const contentRef = useRef<HTMLElement>(null);
 
   // Automatically scroll to the top of the page on route change
-  // and trigger content entrance animation
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -27,13 +25,6 @@ const AppShell: React.FC = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-
-    // Trigger entrance animation
-    setContentEnter(true);
-    const timer = setTimeout(() => {
-      setContentEnter(false);
-    }, 400);
-    return () => clearTimeout(timer);
   }, [location.pathname, location.search]);
 
   const toggleSidebar = useCallback(() => {
@@ -89,8 +80,10 @@ const AppShell: React.FC = () => {
           onOpenNotifications={openNotifications}
           onOpenCustomerCorner={openCustomerCorner}
         />
-        <main className={`app-content ${contentEnter ? 'app-content-enter' : ''}`} ref={contentRef} role="main">
-          <Outlet />
+        <main className="app-content" ref={contentRef} role="main">
+          <div key={location.pathname} className="app-page-fluid-wrapper">
+            <Outlet />
+          </div>
         </main>
       </div>
 

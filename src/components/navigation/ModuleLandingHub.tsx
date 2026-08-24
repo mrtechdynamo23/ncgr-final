@@ -158,6 +158,7 @@ export const ModuleLandingHub: React.FC<ModuleLandingHubProps> = ({
                 {/* Header: Icon + Badge */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <div
+                    className="subtile-icon-wrapper"
                     style={{
                       width: 36,
                       height: 36,
@@ -167,6 +168,7 @@ export const ModuleLandingHub: React.FC<ModuleLandingHubProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      transition: 'transform 220ms cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   >
                     {tile.icon}
@@ -233,7 +235,7 @@ export const ModuleLandingHub: React.FC<ModuleLandingHubProps> = ({
                 }}
               >
                 <span>Open Workspace</span>
-                <ArrowRight size={13} />
+                <ArrowRight size={13} className="subtile-arrow-icon" />
               </div>
             </div>
           );
