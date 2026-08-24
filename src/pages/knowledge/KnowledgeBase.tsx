@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { knowledgeDocs, type KnowledgeDocument } from '../../data/knowledge';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
@@ -90,11 +90,11 @@ const KnowledgeBase: React.FC = () => {
     },
   ];
 
-  const uniqueCategories = Array.from(new Set(knowledgeDocs.map(d => d.category))).map(c => ({ label: c, value: c }));
+  const uniqueCategories = useMemo(() => Array.from(new Set(knowledgeDocs.map(d => d.category))).map(c => ({ label: c, value: c })), []);
 
-  const filters: FilterDef<KnowledgeDocument>[] = [
+  const filters: FilterDef<KnowledgeDocument>[] = useMemo(() => [
     { key: 'category', label: 'Categories', options: uniqueCategories },
-  ];
+  ], [uniqueCategories]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>

@@ -210,13 +210,13 @@ const ChangeRequestsPage: React.FC = () => {
     return Array.from(new Set(appChangesList.map(c => c.tower))).filter(Boolean).map(t => ({ label: t, value: t }));
   }, []);
 
-  const filters: FilterDef<AppChangeRecord>[] = [
+  const filters: FilterDef<AppChangeRecord>[] = useMemo(() => [
     { key: 'tower', label: 'Tower', options: uniqueTowers },
     { key: 'changeType', label: 'Type', options: [{ label: 'Normal', value: 'Normal' }, { label: 'Standard', value: 'Standard' }, { label: 'Emergency', value: 'Emergency' }] },
     { key: 'risk', label: 'Risk', options: [{ label: 'High', value: 'High' }, { label: 'Medium', value: 'Medium' }, { label: 'Low', value: 'Low' }] },
     { key: 'approvalStatus', label: 'Approval', options: [{ label: 'Approved', value: 'Approved' }, { label: 'CAB Review', value: 'CAB Review' }, { label: 'Pending', value: 'Pending' }] },
     { key: 'status', label: 'Status', options: [{ label: 'Scheduled', value: 'Scheduled' }, { label: 'CAB Approved', value: 'CAB Approved' }, { label: 'Planned', value: 'Planned' }, { label: 'Completed', value: 'Completed' }] },
-  ];
+  ], [uniqueTowers]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 48 }}>

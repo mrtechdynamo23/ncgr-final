@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import type { Incident } from '../../data/incidents';
@@ -191,30 +191,30 @@ const Incidents: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(incidents.map((e: Incident) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
-  const uniquePriorities = [
+  const uniqueTowers = useMemo(() => Array.from(new Set(incidents.map((e: Incident) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) })), [incidents]);
+  const uniquePriorities = useMemo(() => [
     { label: 'P1 - Critical', value: 'P1' },
     { label: 'P2 - High', value: 'P2' },
     { label: 'P3 - Medium', value: 'P3' },
     { label: 'P4 - Low', value: 'P4' },
-  ];
-  const uniqueStatuses = [
+  ], []);
+  const uniqueStatuses = useMemo(() => [
     { label: 'Open', value: 'Open' },
     { label: 'In Progress', value: 'In Progress' },
     { label: 'Resolved', value: 'Resolved' },
     { label: 'Closed', value: 'Closed' },
-  ];
-  const uniqueResolutions = [
+  ], []);
+  const uniqueResolutions = useMemo(() => [
     { label: 'Human', value: 'Human' },
     { label: 'AI Assistant', value: 'AI Assistant' },
-  ];
+  ], []);
 
-  const filters: FilterDef<Incident>[] = [
+  const filters: FilterDef<Incident>[] = useMemo(() => [
     { key: 'priority', label: 'Priorities', options: uniquePriorities },
     { key: 'resolutionBy', label: 'Resolution By', options: uniqueResolutions },
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     { key: 'status', label: 'Statuses', options: uniqueStatuses },
-  ];
+  ], [uniquePriorities, uniqueResolutions, uniqueTowers, uniqueStatuses]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>

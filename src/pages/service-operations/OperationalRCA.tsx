@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
 import SubPageHeader from '../../components/navigation/SubPageHeader';
@@ -143,9 +143,9 @@ const OperationalRCA: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(rcaList.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueTowers = useMemo(() => Array.from(new Set(rcaList.map(e => e.tower))).map(t => ({ label: t, value: t })), []);
 
-  const filters: FilterDef<RCARecord>[] = [
+  const filters: FilterDef<RCARecord>[] = useMemo(() => [
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     {
       key: 'status',
@@ -157,7 +157,7 @@ const OperationalRCA: React.FC = () => {
         { label: 'Draft', value: 'Draft' },
       ],
     },
-  ];
+  ], [uniqueTowers]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>

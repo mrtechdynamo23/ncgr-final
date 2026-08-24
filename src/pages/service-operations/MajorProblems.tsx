@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
 import SubPageHeader from '../../components/navigation/SubPageHeader';
@@ -167,9 +167,9 @@ const MajorProblems: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(problemsList.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueTowers = useMemo(() => Array.from(new Set(problemsList.map(e => e.tower))).map(t => ({ label: t, value: t })), []);
 
-  const filters: FilterDef<ProblemRecord>[] = [
+  const filters: FilterDef<ProblemRecord>[] = useMemo(() => [
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     {
       key: 'priority',
@@ -190,7 +190,7 @@ const MajorProblems: React.FC = () => {
         { label: 'Resolved', value: 'Resolved' },
       ],
     },
-  ];
+  ], [uniqueTowers]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>

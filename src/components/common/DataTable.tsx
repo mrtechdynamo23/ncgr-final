@@ -104,10 +104,27 @@ export function DataTable<T extends Record<string, any>>({
     });
   }, [data, searchTerm, activeFilters, filters, searchKeys]);
 
-  // Notify parent of filtered dataset change
+  const onFilteredDataChangeRef = React.useRef(onFilteredDataChange);
+  onFilteredDataChangeRef.current = onFilteredDataChange;
+
+  const lastEmittedRef = React.useRef<T[] | null>(null);
+
+  // Notify parent of filtered dataset change safely without infinite feedback loops
   useEffect(() => {
-    onFilteredDataChange?.(filteredData);
-  }, [filteredData, onFilteredDataChange]);
+    if (!onFilteredDataChangeRef.current) return;
+
+    if (lastEmittedRef.current) {
+      if (
+        lastEmittedRef.current.length === filteredData.length &&
+        lastEmittedRef.current.every((item, i) => item === filteredData[i])
+      ) {
+        return; // Data has not changed, do not trigger parent re-render!
+      }
+    }
+
+    lastEmittedRef.current = filteredData;
+    onFilteredDataChangeRef.current(filteredData);
+  }, [filteredData]);
 
   // Sorting Logic
   const sortedData = useMemo(() => {

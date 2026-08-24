@@ -188,9 +188,7 @@ const CriticalIncidents: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(criticalList.map((e: Incident) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
-
-  const filters: FilterDef<Incident>[] = [
+  const filters: FilterDef<Incident>[] = useMemo(() => [
     {
       key: 'priority',
       label: 'Severity',
@@ -207,7 +205,11 @@ const CriticalIncidents: React.FC = () => {
         { label: 'AI Assistant', value: 'AI Assistant' },
       ],
     },
-    { key: 'tower', label: 'Towers', options: uniqueTowers },
+    {
+      key: 'tower',
+      label: 'Towers',
+      options: Array.from(new Set(criticalList.map((e: Incident) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) })),
+    },
     {
       key: 'status',
       label: 'Status',
@@ -218,7 +220,7 @@ const CriticalIncidents: React.FC = () => {
         { label: 'Closed', value: 'Closed' },
       ],
     },
-  ];
+  ], [criticalList]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import type { ServiceRequest } from '../../data/serviceRequests';
@@ -127,11 +127,11 @@ const ServiceRequests: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
-  const uniqueTypes = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.requestType))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
-  const uniqueDepts = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.department))).filter(Boolean).map(d => ({ label: String(d), value: String(d) }));
+  const uniqueTowers = useMemo(() => Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) })), [serviceRequests]);
+  const uniqueTypes = useMemo(() => Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.requestType))).filter(Boolean).map(t => ({ label: String(t), value: String(t) })), [serviceRequests]);
+  const uniqueDepts = useMemo(() => Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.department))).filter(Boolean).map(d => ({ label: String(d), value: String(d) })), [serviceRequests]);
 
-  const filters: FilterDef<ServiceRequest>[] = [
+  const filters: FilterDef<ServiceRequest>[] = useMemo(() => [
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     { key: 'requestType', label: 'Request Types', options: uniqueTypes },
     { key: 'department', label: 'Departments', options: uniqueDepts },
@@ -145,7 +145,7 @@ const ServiceRequests: React.FC = () => {
         { label: 'Closed', value: 'Closed' },
       ],
     },
-  ];
+  ], [uniqueTowers, uniqueTypes, uniqueDepts]);
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
