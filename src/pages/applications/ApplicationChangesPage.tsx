@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
 import { appChangesList, type AppChangeRecord } from '../../data/master-applications';
+import { useDataStore } from '../../data/mockDataStore';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
+import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
+import type { MasterEmployee } from '../../data/master-employees';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { APPLICATION_SERVICES_SIBLINGS } from './ApplicationServicesLandingPage';
 
 const ApplicationChangesPage: React.FC = () => {
+  const { employees } = useDataStore();
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<MasterEmployee | null>(null);
+  const [isEmpModalOpen, setIsEmpModalOpen] = useState(false);
 
   const emergencyCount = appChangesList.filter(c => c.changeType === 'Emergency').length;
   const standardCount = appChangesList.filter(c => c.changeType === 'Standard').length;
   const normalCount = appChangesList.filter(c => c.changeType === 'Normal').length;
+
+  const handleOpenEmployee = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const emp = employees.find(e => e.name === name);
+    if (emp) {
+      setSelectedEmployee(emp);
+      setIsEmpModalOpen(true);
+    }
+  };
 
   const columns: ColumnDef<AppChangeRecord>[] = [
     {
@@ -96,7 +113,25 @@ const ApplicationChangesPage: React.FC = () => {
     {
       header: 'Change Owner',
       accessorKey: 'owner',
-      cell: (row) => <span style={{ fontWeight: 600 }}>{row.owner}</span>,
+      cell: (row) => (
+        <button
+          onClick={(e) => handleOpenEmployee(row.owner, e)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--ncgr-deep-blue, #074A76)',
+            fontWeight: 700,
+            fontSize: '0.8125rem',
+            cursor: 'pointer',
+            textAlign: 'left',
+            padding: 0,
+            textDecoration: 'underline',
+          }}
+          title="Click to view full employee profile"
+        >
+          {row.owner}
+        </button>
+      ),
     },
     {
       header: 'Status',
@@ -152,15 +187,13 @@ const ApplicationChangesPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Application Changes & Release Calendar
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Change Advisory Board (CAB) approvals, release deployment windows, emergency hotfixes, and risk impact
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Application Services"
+        modulePath="/applications"
+        pageTitle="Application Changes & Releases"
+        siblingPages={APPLICATION_SERVICES_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div
@@ -210,6 +243,13 @@ const ApplicationChangesPage: React.FC = () => {
           onClose={() => setSelectedAppId(null)}
         />
       )}
+
+      {/* Employee Detail Modal */}
+      <EmployeeDetailModal
+        employee={selectedEmployee}
+        isOpen={isEmpModalOpen}
+        onClose={() => setIsEmpModalOpen(false)}
+      />
     </div>
   );
 };

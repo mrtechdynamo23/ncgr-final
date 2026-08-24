@@ -49,7 +49,7 @@
     "rcaPending": "RCA Pending"
   },
   "slaAssurance": {
-    "title": "SLA Assurance",
+    "title": "SLA Management",
     "pendingMessage": "Configuration pending business confirmation."
   },
   "otiCockpit": {

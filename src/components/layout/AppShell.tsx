@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopHeader from './TopHeader';
 import NotificationDrawer from './NotificationDrawer';
+import CustomerCornerDrawer from '../common/CustomerCornerDrawer';
 import ChatAssistant from '../chat-assistant/ChatAssistant';
 import CommandPalette from '../command-palette/CommandPalette';
 
@@ -11,6 +12,29 @@ const AppShell: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [customerCornerOpen, setCustomerCornerOpen] = useState(false);
+  const [contentEnter, setContentEnter] = useState(false);
+
+  const location = useLocation();
+  const contentRef = useRef<HTMLElement>(null);
+
+  // Automatically scroll to the top of the page on route change
+  // and trigger content entrance animation
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+
+    // Trigger entrance animation
+    setContentEnter(true);
+    const timer = setTimeout(() => {
+      setContentEnter(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [location.pathname, location.search]);
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => !prev);
@@ -40,6 +64,14 @@ const AppShell: React.FC = () => {
     setNotificationsOpen(false);
   }, []);
 
+  const openCustomerCorner = useCallback(() => {
+    setCustomerCornerOpen(true);
+  }, []);
+
+  const closeCustomerCorner = useCallback(() => {
+    setCustomerCornerOpen(false);
+  }, []);
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -55,8 +87,9 @@ const AppShell: React.FC = () => {
           onOpenMobileSidebar={openMobileSidebar}
           onOpenCommandPalette={openCommandPalette}
           onOpenNotifications={openNotifications}
+          onOpenCustomerCorner={openCustomerCorner}
         />
-        <main className="app-content" role="main">
+        <main className={`app-content ${contentEnter ? 'app-content-enter' : ''}`} ref={contentRef} role="main">
           <Outlet />
         </main>
       </div>
@@ -65,6 +98,10 @@ const AppShell: React.FC = () => {
       <NotificationDrawer
         isOpen={notificationsOpen}
         onClose={closeNotifications}
+      />
+      <CustomerCornerDrawer
+        isOpen={customerCornerOpen}
+        onClose={closeCustomerCorner}
       />
       <ChatAssistant />
       <CommandPalette

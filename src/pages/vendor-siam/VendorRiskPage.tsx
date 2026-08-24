@@ -5,6 +5,8 @@ import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
 import type { VendorRiskRecord, RiskLikelihood, RiskImpact } from '../../data/vendorData';
 import type { MasterEmployee } from '../../data/master-employees';
 import { X, RefreshCw } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { VENDOR_SIAM_SIBLINGS } from './VendorSIAMLandingPage';
 
 const LIKELIHOODS: RiskLikelihood[] = ['Very High', 'High', 'Medium', 'Low', 'Very Low'];
 const IMPACTS: RiskImpact[] = ['Very Low', 'Low', 'Medium', 'High', 'Very High'];
@@ -200,15 +202,13 @@ const VendorRiskPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Vendor Risk Management & 5×5 Heatmap
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Interactive risk matrix scoring vendor dependencies, commercial renewals, compliance exposure, and mitigation plans
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Vendor & SIAM"
+        modulePath="/vendor-siam"
+        pageTitle="Vendor Risk"
+        siblingPages={VENDOR_SIAM_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

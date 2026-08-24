@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Search, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
@@ -30,10 +30,13 @@ interface DataTableProps<T> {
   filters?: FilterDef<T>[];
   pageSize?: number;
   onRowClick?: (row: T) => void;
+  onFilteredDataChange?: (filtered: T[]) => void;
   title?: string;
   subtitle?: string;
   actionButton?: React.ReactNode;
   exportFilename?: string;
+  maxHeight?: number | string;
+  containerStyle?: React.CSSProperties;
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -44,10 +47,13 @@ export function DataTable<T extends Record<string, any>>({
   filters = [],
   pageSize = 15,
   onRowClick,
+  onFilteredDataChange,
   title,
   subtitle,
   actionButton,
   exportFilename,
+  maxHeight = '540px',
+  containerStyle,
 }: DataTableProps<T>) {
   const { i18n } = useTranslation('common');
   const isRtl = i18n.language === 'ar';
@@ -97,6 +103,11 @@ export function DataTable<T extends Record<string, any>>({
       return true;
     });
   }, [data, searchTerm, activeFilters, filters, searchKeys]);
+
+  // Notify parent of filtered dataset change
+  useEffect(() => {
+    onFilteredDataChange?.(filteredData);
+  }, [filteredData, onFilteredDataChange]);
 
   // Sorting Logic
   const sortedData = useMemo(() => {
@@ -282,8 +293,14 @@ export function DataTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      {/* Table Container */}
-      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      {/* Table Container — Frozen Header & Contained Scroll */}
+      <div
+        className="data-table-scroll-container"
+        style={{
+          maxHeight: maxHeight,
+          ...containerStyle,
+        }}
+      >
         <table
           style={{
             width: '100%',
@@ -295,7 +312,6 @@ export function DataTable<T extends Record<string, any>>({
           <thead>
             <tr
               style={{
-                background: 'var(--bg-secondary, #F1F5F9)',
                 borderBottom: '1px solid var(--border, #E2E8F0)',
               }}
             >
@@ -312,6 +328,9 @@ export function DataTable<T extends Record<string, any>>({
                     width: col.width,
                     whiteSpace: 'nowrap',
                     textAlign: isRtl ? 'right' : 'left',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: isRtl ? 'flex-start' : 'flex-start' }}>

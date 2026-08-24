@@ -1,5 +1,7 @@
 import React from 'react';
 import DataTable, { type ColumnDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { IT_SUPPORT_TOOLS_SIBLINGS } from './ITSupportToolsLandingPage';
 
 interface SecurityTool {
   id: string;
@@ -105,15 +107,13 @@ const SecurityTechnology: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Security & Identity Technologies
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          PAM privilege control, CrowdStrike EDR sensors, Imperva DAM database security, and Tenable vulnerability scanning
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="IT Support Tool Management"
+        modulePath="/technology"
+        pageTitle="Security Technology"
+        siblingPages={IT_SUPPORT_TOOLS_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

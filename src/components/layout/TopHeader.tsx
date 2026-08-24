@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../providers/ThemeProvider';
 import { useLanguageDirection } from '../../hooks/useLanguageDirection';
@@ -6,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useDataStore } from '../../data/mockDataStore';
 import {
   Search, Bell, Sun, Moon, Languages, Menu,
-  PanelLeftClose, PanelLeftOpen, LogOut
+  PanelLeftClose, PanelLeftOpen, LogOut, Headphones, Calendar as CalendarIcon
 } from 'lucide-react';
 
 interface TopHeaderProps {
@@ -15,6 +16,7 @@ interface TopHeaderProps {
   onOpenMobileSidebar: () => void;
   onOpenCommandPalette: () => void;
   onOpenNotifications: () => void;
+  onOpenCustomerCorner: () => void;
 }
 
 const TopHeader: React.FC<TopHeaderProps> = ({
@@ -23,21 +25,25 @@ const TopHeader: React.FC<TopHeaderProps> = ({
   onOpenMobileSidebar,
   onOpenCommandPalette,
   onOpenNotifications,
+  onOpenCustomerCorner,
 }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation('common');
   const { theme, toggleTheme } = useTheme();
   const { language, toggleLanguage } = useLanguageDirection();
   const { logout } = useAuth();
   const { unreadNotificationCount } = useDataStore();
 
+  const isCalendarActive = location.pathname === '/calendar';
+
   return (
     <header className="app-header" role="banner">
       {/* Mobile menu button */}
       <button
-        className="header-action-btn"
+        className="header-action-btn mobile-menu-btn"
         onClick={onOpenMobileSidebar}
         aria-label="Open menu"
-        style={{ display: 'none' }}
         id="mobile-menu-btn"
       >
         <Menu size={20} />
@@ -45,7 +51,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({
 
       {/* Desktop sidebar toggle */}
       <button
-        className="header-action-btn"
+        className="header-action-btn desktop-sidebar-btn"
         onClick={onToggleSidebar}
         aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       >
@@ -73,6 +79,21 @@ const TopHeader: React.FC<TopHeaderProps> = ({
 
         <div className="header-divider" />
 
+        {/* Central Meeting & Governance Calendar Utility Button */}
+        <button
+          className={`header-action-btn ${isCalendarActive ? 'active' : ''}`}
+          onClick={() => navigate('/calendar')}
+          aria-label="Meeting Governance & Calendar"
+          title="Central Meeting Governance & Calendar (WSR / MSR / DSR / MOM)"
+          id="central-calendar-btn"
+          style={{
+            color: isCalendarActive ? 'var(--ncgr-deep-blue, #074A76)' : 'inherit',
+            background: isCalendarActive ? 'rgba(7, 74, 118, 0.1)' : 'transparent',
+          }}
+        >
+          <CalendarIcon size={18} />
+        </button>
+
         {/* Language Toggle */}
         <button
           className="header-action-btn"
@@ -91,6 +112,18 @@ const TopHeader: React.FC<TopHeaderProps> = ({
           title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
         >
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+
+        {/* Customer Corner Action Button */}
+        <button
+          className="header-action-btn"
+          onClick={onOpenCustomerCorner}
+          aria-label="Customer Corner Fast Action Desk"
+          title="Customer Corner — Fast Action Desk"
+          id="customer-corner-btn"
+          style={{ color: 'var(--ncgr-mint-green, #40904F)' }}
+        >
+          <Headphones size={18} />
         </button>
 
         {/* Notifications */}

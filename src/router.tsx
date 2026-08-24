@@ -4,13 +4,25 @@ import CommandCentre from './pages/CommandCentre';
 import { RequireAuth } from './components/auth/RequireAuth';
 import LoginPage from './pages/LoginPage';
 
+// ─── Module Landing Hubs ─────────────────────────────────────
+import TeamOverviewLandingPage from './pages/operations/TeamOverviewLandingPage';
+import CommandCenterLandingPage from './pages/service-operations/CommandCenterLandingPage';
+import ApplicationServicesLandingPage from './pages/applications/ApplicationServicesLandingPage';
+import ITSupportToolsLandingPage from './pages/technology/ITSupportToolsLandingPage';
+import InfrastructureLandingPage from './pages/infrastructure/InfrastructureLandingPage';
+import VendorSIAMLandingPage from './pages/vendor-siam/VendorSIAMLandingPage';
+import ProgramManagementLandingPage from './pages/program-management/ProgramManagementLandingPage';
+
 // ─── Team Overview ───────────────────────────────────────────
-import OperationalServices from './pages/operations/OperationalServices';
 import ResourceRoster from './pages/operations/ResourceRoster';
 import TeamStructurePage from './pages/operations/TeamStructurePage';
 import ContactDirectory from './pages/operations/ContactDirectory';
 import LeaveManagement from './pages/operations/LeaveManagement';
 import AttendanceView from './pages/operations/AttendanceView';
+
+// ─── Saudization & Empowerment ───────────────────────────────
+import SaudizationTracker from './pages/saudization/SaudizationTracker';
+import SaudiEmpowermentAcademy from './pages/empowerment/SaudiEmpowermentAcademy';
 
 // ─── Shift Operations Log ────────────────────────────────────
 import ShiftOperationsLog from './pages/shift-operations/ShiftOperationsLog';
@@ -26,6 +38,7 @@ import ServiceRequests from './pages/service-operations/ServiceRequests';
 import MajorProblems from './pages/service-operations/MajorProblems';
 import OperationalRCA from './pages/service-operations/OperationalRCA';
 import KnowledgeBase from './pages/knowledge/KnowledgeBase';
+import ChangeRequestsPage from './pages/service-operations/ChangeRequestsPage';
 
 // ─── Application Services ────────────────────────────────────
 import ApplicationHealthPage from './pages/applications/ApplicationHealthPage';
@@ -77,16 +90,32 @@ import AuditCompliance from './pages/compliance/AuditCompliance';
 // ─── SLA Assurance ───────────────────────────────────────────
 import SLAAssurance from './pages/governance/SLAAssurance';
 
+// ─── Central Calendar & Meeting Governance ────────────────────
+import MeetingCalendarPage from './pages/calendar/MeetingCalendarPage';
+
+// ─── Central Reports Repository (Repos) ───────────────────────
+import ReportsRepositoryPage from './pages/repos/ReportsRepositoryPage';
+
 // ─── Management Reports ──────────────────────────────────────
 import WSRReportView from './pages/reporting/WSRReportView';
 import MSRReportView from './pages/reporting/MSRReportView';
 import ExecutiveReportView from './pages/reporting/ExecutiveReportView';
-import AIAnalyticsView from './pages/reporting/AIAnalyticsView';
+
+// ─── Landing Page (Premium Entry Experience) ──────────────────
+import LandingPage from './pages/LandingPage';
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/welcome',
+    element: (
+      <RequireAuth>
+        <LandingPage />
+      </RequireAuth>
+    ),
   },
   {
     path: '/',
@@ -96,6 +125,12 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
+      // Central Meeting Governance Calendar
+      {
+        path: 'calendar',
+        element: <MeetingCalendarPage />,
+      },
+
       // 1. Executive Dashboard (Homepage)
       {
         index: true,
@@ -105,7 +140,11 @@ export const router = createBrowserRouter([
       // 2. Team Overview
       {
         path: 'team-overview',
-        element: <OperationalServices />,
+        element: <TeamOverviewLandingPage />,
+      },
+      {
+        path: 'team-overview/hub',
+        element: <Navigate to="/team-overview/resource-data" replace />,
       },
       {
         path: 'team-overview/resource-data',
@@ -128,7 +167,17 @@ export const router = createBrowserRouter([
         element: <AttendanceView />,
       },
 
-      // 3. Shift Operations Log
+      // 3. Saudization Tracker & Saudi Empowerment
+      {
+        path: 'saudization-tracker',
+        element: <SaudizationTracker />,
+      },
+      {
+        path: 'saudi-empowerment',
+        element: <SaudiEmpowermentAcademy />,
+      },
+
+      // 4. Shift Operations Log
       {
         path: 'shift-operations',
         element: <ShiftOperationsLog />,
@@ -146,7 +195,11 @@ export const router = createBrowserRouter([
         element: <OperationsMOM />,
       },
 
-      // 4. Command Center
+      // 5. Command Center
+      {
+        path: 'command-center',
+        element: <CommandCenterLandingPage />,
+      },
       {
         path: 'command-center/service-desk',
         element: <ServiceDeskOverview />,
@@ -175,8 +228,16 @@ export const router = createBrowserRouter([
         path: 'command-center/knowledge',
         element: <KnowledgeBase />,
       },
+      {
+        path: 'command-center/change-requests',
+        element: <ChangeRequestsPage />,
+      },
 
-      // 5. Application Services
+      // 6. Application Services
+      {
+        path: 'applications',
+        element: <ApplicationServicesLandingPage />,
+      },
       {
         path: 'applications/health',
         element: <ApplicationHealthPage />,
@@ -206,7 +267,11 @@ export const router = createBrowserRouter([
         element: <ApplicationSupportPage />,
       },
 
-      // 6. IT Support Tool Management
+      // 7. IT Support Tool Management
+      {
+        path: 'technology',
+        element: <ITSupportToolsLandingPage />,
+      },
       {
         path: 'technology/servicenow',
         element: <ServiceNowHealth />,
@@ -232,7 +297,7 @@ export const router = createBrowserRouter([
         element: <CloudPlatforms />,
       },
 
-      // 7. License & Entitlement Health
+      // 8. License & Entitlement Health
       {
         path: 'license-health',
         element: <LicenseHealth />,
@@ -242,7 +307,11 @@ export const router = createBrowserRouter([
         element: <LicenseHealth />,
       },
 
-      // 8. Infrastructure Health
+      // 9. Infrastructure Health
+      {
+        path: 'infrastructure',
+        element: <InfrastructureLandingPage />,
+      },
       {
         path: 'infrastructure/overview',
         element: <InfrastructureHealthPage />,
@@ -268,7 +337,11 @@ export const router = createBrowserRouter([
         element: <DigitalWorkplacePage />,
       },
 
-      // 9. Vendor & SIAM
+      // 10. Vendor & SIAM
+      {
+        path: 'vendor-siam',
+        element: <VendorSIAMLandingPage />,
+      },
       {
         path: 'vendor-siam/performance',
         element: <VendorPerformancePage />,
@@ -286,7 +359,11 @@ export const router = createBrowserRouter([
         element: <VendorActionsPage />,
       },
 
-      // 10. Program Management
+      // 11. Program Management
+      {
+        path: 'program-management',
+        element: <ProgramManagementLandingPage />,
+      },
       {
         path: 'program-management/overview',
         element: <ProgramOverviewPage />,
@@ -339,12 +416,19 @@ export const router = createBrowserRouter([
         path: 'reports/executive',
         element: <ExecutiveReportView />,
       },
+      // Central Reports Repository (Repos)
       {
-        path: 'reports/analytics',
-        element: <AIAnalyticsView />,
+        path: 'repos',
+        element: <ReportsRepositoryPage />,
+      },
+      {
+        path: 'reports',
+        element: <Navigate to="/repos" replace />,
       },
 
       // ─── Backward-compatibility & Aliases ──────────────────
+      { path: 'sla-management', element: <Navigate to="/assurance/sla" replace /> },
+      { path: 'governance/sla', element: <Navigate to="/assurance/sla" replace /> },
       { path: 'operations/*', element: <Navigate to="/team-overview" replace /> },
       { path: 'governance/vendor-management', element: <Navigate to="/vendor-siam/performance" replace /> },
       { path: 'governance/program-overview', element: <Navigate to="/program-management/overview" replace /> },

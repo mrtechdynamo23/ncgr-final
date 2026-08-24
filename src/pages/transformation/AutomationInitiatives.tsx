@@ -122,9 +122,6 @@ const AutomationInitiatives: React.FC = () => {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
           Digital Transformation & AI Accelerator
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Three-Band Accelerator Model: Stabilize & Automate → Optimize & Integrate → Transform & AI (18 Initiatives)
-        </p>
       </div>
 
       {/* KPI Cards Strip */}

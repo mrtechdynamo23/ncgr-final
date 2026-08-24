@@ -3,7 +3,24 @@
  * 355+ Employees — Fictional but internally consistent environment.
  * Towers: Infrastructure, Network, Service Desk, Applications, SAP, Database, Cloud, Security, Digital Workplace
  * Departments: IT Operations, Infrastructure, Applications, Service Management, Cyber Security, PMO, Enterprise Architecture, Digital Transformation
+ *
+ * Saudization Location Buckets (approved domains per Section 4):
+ *   Program Management, Proj Mgmt & Mobilization, Integrated Command Center,
+ *   Service Desk Mgmt, Tools Management, Service Assurance, Infrastructure,
+ *   Application Mgmt, Backup and support services
  */
+
+// ─── ROLE HISTORY INTERFACE ───────────────────────────────────
+export interface RoleHistoryEntry {
+  holder: string;
+  holderId: string;
+  roleName: string;
+  startDate: string;
+  endDate: string;
+  durationMonths: number;
+}
+
+export type EmployeeLevel = 'L1' | 'L2' | 'L3' | 'L4' | 'SME/Manager';
 
 export interface MasterEmployee {
   employeeId: string;
@@ -23,7 +40,103 @@ export interface MasterEmployee {
   expatLocal: 'Local' | 'Expat';
   employmentType: 'Full-Time' | 'Contract' | 'Consultant';
   currentAssignment: string;
+  /** Approved Saudization domain — mapped from tower/department */
+  locationBucket: string;
+  /** Historical record of who held this role before this person */
+  roleHistory: RoleHistoryEntry[];
+  /** Deterministic level classification based on position */
+  level: EmployeeLevel;
+  /** Gender */
+  gender: 'Male' | 'Female';
 }
+
+/**
+ * Deterministic level mapping from position.
+ * Administrator/Analyst → L1, Engineer/Technician/Support Engineer → L2,
+ * Senior Engineer/Senior Analyst/Specialist → L3,
+ * Team Lead/Operations Lead/Coordinator/Lead Engineer → L4,
+ * Manager/Architect/Consultant → SME/Manager
+ */
+export function getPositionLevel(position: string): EmployeeLevel {
+  switch (position) {
+    case 'Administrator':
+    case 'Analyst':
+      return 'L1';
+    case 'Engineer':
+    case 'Support Engineer':
+    case 'Technician':
+      return 'L2';
+    case 'Senior Engineer':
+    case 'Senior Analyst':
+    case 'Specialist':
+      return 'L3';
+    case 'Team Lead':
+    case 'Operations Lead':
+    case 'Coordinator':
+    case 'Lead Engineer':
+      return 'L4';
+    case 'Manager':
+    case 'Architect':
+    case 'Consultant':
+      return 'SME/Manager';
+    default:
+      return 'L2';
+  }
+}
+
+// ─── SAUDIZATION AUTHORITATIVE DATA (Section 4) ──────────────
+export interface SaudizationDomainTarget {
+  locationBucket: string;
+  targetPct: number;
+  actualPct: number;
+  status: 'OK' | 'NOT OK';
+}
+
+export const SAUDIZATION_TARGETS: SaudizationDomainTarget[] = [
+  { locationBucket: 'Program Management', targetPct: 50, actualPct: 50, status: 'OK' },
+  { locationBucket: 'Proj Mgmt & Mobilization', targetPct: 60, actualPct: 83, status: 'OK' },
+  { locationBucket: 'Integrated Command Center', targetPct: 90, actualPct: 93, status: 'OK' },
+  { locationBucket: 'Service Desk Mgmt', targetPct: 100, actualPct: 100, status: 'OK' },
+  { locationBucket: 'Tools Management', targetPct: 60, actualPct: 65, status: 'OK' },
+  { locationBucket: 'Service Assurance', targetPct: 90, actualPct: 82, status: 'NOT OK' },
+  { locationBucket: 'Infrastructure', targetPct: 60, actualPct: 61, status: 'OK' },
+  { locationBucket: 'Application Mgmt', targetPct: 60, actualPct: 40, status: 'NOT OK' },
+  { locationBucket: 'Backup and support services', targetPct: 60, actualPct: 100, status: 'OK' },
+];
+
+export const LOCATION_BUCKETS = SAUDIZATION_TARGETS.map(s => s.locationBucket);
+
+/**
+ * Mapping from (tower, department) → approved Saudization location bucket.
+ * Each tower maps to one primary Saudization domain.
+ */
+function getTowerLocationBucket(tower: string, department: string): string {
+  if (department === 'PMO') return 'Program Management';
+  if (department === 'Digital Transformation' || department === 'Enterprise Architecture') return 'Proj Mgmt & Mobilization';
+  switch (tower) {
+    case 'Service Desk': return department === 'Service Management' ? 'Service Desk Mgmt' : 'Integrated Command Center';
+    case 'Network': return 'Integrated Command Center';
+    case 'Infrastructure': return 'Infrastructure';
+    case 'Database': return 'Infrastructure';
+    case 'Cloud': return 'Infrastructure';
+    case 'Applications': return 'Application Mgmt';
+    case 'SAP': return 'Application Mgmt';
+    case 'Security': return 'Service Assurance';
+    case 'Digital Workplace': return 'Backup and support services';
+    default: return 'Tools Management';
+  }
+}
+
+// ─── DETERMINISTIC SEEDED PRNG ────────────────────────────────
+// Replaces Math.random() for stable, reproducible data across reloads
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
+const rng = seededRandom(42_7316);
 
 // ─── HELPER: Generate synthetic Saudi phone numbers ────────────
 const phonePrefixes = ['50', '53', '54', '55', '56', '57', '58', '59'];
@@ -53,28 +166,112 @@ const statuses: MasterEmployee['status'][] = ['Active', 'Active', 'Active', 'Act
 const locations = ['Riyadh Primary', 'Riyadh DR', 'Jeddah Office', 'Remote'];
 const assignments = ['NCGR ITMS Operations', 'NCGR Infrastructure Program', 'NCGR Application Services', 'NCGR Security Operations', 'NCGR Cloud Migration', 'NCGR Digital Workplace', 'NCGR SAP Operations', 'NCGR Network Operations', 'NCGR Service Desk Operations'];
 
+// ─── Previous role holder name pools (for role history) ───────
+const prevHolderNames = [
+  'Tariq Al-Rashidi', 'Bandar Al-Dawsari', 'Mishal Al-Subaie', 'Saud Al-Enezi',
+  'Nawaf Al-Hajri', 'Ziad Al-Bogami', 'Abdulrahman Al-Thani', 'Badr Al-Fadhli',
+  'Hessa Al-Harthy', 'Jawahir Al-Khaldi', 'Ganesh Rao', 'Naveen Das',
+  'Karthik Joshi', 'Prasad Bhat', 'Venkat Mishra', 'Ashok Pandey',
+  'Deepak Choudhary', 'Manoj Verma', 'Anand Singh', 'Ravi Gupta',
+];
+
+// Authoritative Previous Role Holder overrides for key resources to match KT records exactly
+const KNOWN_PREV_HOLDERS: Record<string, string> = {
+  'Ahmed Al-Qahtani': 'Tariq Al-Rashidi',
+  'Mohammed Al-Dosari': 'Bandar Al-Dawsari',
+  'Sara Al-Otaibi': 'Mishal Al-Subaie',
+  'Omar Al-Mutairi': 'Saud Al-Enezi',
+  'Aisha Rahman': 'Nawaf Al-Hajri',
+  'Noura Al-Qahtani': 'Ganesh Rao',
+  'Layla Hassan': 'Deepak Choudhary',
+  'Huda Al-Salem': 'Karthik Joshi',
+  'Fahad Al-Subaie': 'Ziad Al-Bogami',
+  'Khalid Al-Ghamdi': 'Abdulrahman Al-Thani',
+  'Reem Al-Zahrani': 'Badr Al-Fadhli',
+  'Sultan Al-Malki': 'Hessa Al-Harthy',
+  'Turki Al-Subaie': 'Jawahir Al-Khaldi',
+};
+
+function generateRoleHistory(empIdx: number, role: string, joiningDate: string, empName?: string): RoleHistoryEntry[] {
+  const history: RoleHistoryEntry[] = [];
+  const joinYear = parseInt(joiningDate.substring(0, 4)) || 2023;
+
+  // If there is an authoritative previous role holder for this person, always include them as 1st previous holder
+  if (empName && KNOWN_PREV_HOLDERS[empName]) {
+    const primaryPrev = KNOWN_PREV_HOLDERS[empName];
+    history.push({
+      holder: primaryPrev,
+      holderId: `NCGR-PREV-${100 + (empIdx % 50)}`,
+      roleName: role,
+      startDate: `${joinYear - 2}-01-15`,
+      endDate: `${joinYear}-01-10`,
+      durationMonths: 24,
+    });
+    return history;
+  }
+
+  const numPrev = 1 + (empIdx % 2); // 1 or 2 previous holders
+  for (let p = numPrev; p >= 1; p--) {
+    const prevName = prevHolderNames[(empIdx * 3 + p) % prevHolderNames.length];
+    const startYear = joinYear - p - 1;
+    const endYear = joinYear - p + 1;
+    const startMonth = String(1 + ((empIdx + p * 5) % 12)).padStart(2, '0');
+    const endMonth = String(1 + ((empIdx + p * 7) % 12)).padStart(2, '0');
+    const duration = 12 + (empIdx + p * 3) % 18;
+    history.push({
+      holder: prevName,
+      holderId: `NCGR-${900 + empIdx + p}`,
+      roleName: role,
+      startDate: `${startYear}-${startMonth}-01`,
+      endDate: `${endYear}-${endMonth}-28`,
+      durationMonths: duration,
+    });
+  }
+  return history;
+}
+
+/**
+ * Per-domain expat rate that matches the approved Saudization actuals.
+ * localRate = actualPct / 100. We use this to decide Local vs Expat.
+ */
+const domainLocalRate: Record<string, number> = {};
+for (const t of SAUDIZATION_TARGETS) {
+  domainLocalRate[t.locationBucket] = t.actualPct / 100;
+}
+
 function generateEmployees(): MasterEmployee[] {
   const employees: MasterEmployee[] = [];
   let idCounter = 1001;
 
   // ─── LEADERSHIP (15 key people — preserved from original) ────
-  const leadership: MasterEmployee[] = [
-    { employeeId: 'NCGR-1001', name: 'Faisal Al-Harbi', role: 'ITMS Service Delivery Manager', tower: 'Service Desk', department: 'Service Management', position: 'Manager', location: 'Riyadh Primary', manager: 'Executive Leadership', mobile: '+966 55 284 7316', email: 'faisal.alharbi@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2022-03-15', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
-    { employeeId: 'NCGR-1002', name: 'Ahmed Al-Qahtani', role: 'Infrastructure Operations Lead', tower: 'Infrastructure', department: 'Infrastructure', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 54 671 9284', email: 'ahmed.alqahtani@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2022-05-01', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Infrastructure Program' },
-    { employeeId: 'NCGR-1003', name: 'Mohammed Al-Dosari', role: 'Network Operations Lead', tower: 'Network', department: 'Infrastructure', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 50 394 6158', email: 'mohammed.aldosari@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2022-06-10', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Network Operations' },
-    { employeeId: 'NCGR-1004', name: 'Sara Al-Otaibi', role: 'Application Support Lead', tower: 'Applications', department: 'Applications', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 728 4163', email: 'sara.alotaibi@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-01-15', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Application Services' },
-    { employeeId: 'NCGR-1005', name: 'Khalid Al-Shammari', role: 'NOC Senior Engineer', tower: 'Network', department: 'IT Operations', position: 'Senior Engineer', location: 'Riyadh Primary', manager: 'Mohammed Al-Dosari', mobile: '+966 53 641 9275', email: 'khalid.alshammari@demo.ncgr.local', status: 'Active', shift: 'Night (22:00-06:00)', joiningDate: '2023-03-20', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Network Operations' },
-    { employeeId: 'NCGR-1006', name: 'Priya Nair', role: 'Cloud Engineer', tower: 'Cloud', department: 'Infrastructure', position: 'Engineer', location: 'Riyadh Primary', manager: 'Ahmed Al-Qahtani', mobile: '+966 56 318 4729', email: 'priya.nair@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-04-12', nationality: 'Indian', expatLocal: 'Expat', employmentType: 'Full-Time', currentAssignment: 'NCGR Cloud Migration' },
-    { employeeId: 'NCGR-1007', name: 'Omar Al-Mutairi', role: 'Database Administrator', tower: 'Database', department: 'Infrastructure', position: 'Administrator', location: 'Riyadh DR', manager: 'Ahmed Al-Qahtani', mobile: '+966 54 285 7319', email: 'omar.almutairi@demo.ncgr.local', status: 'Active', shift: 'Evening (14:00-22:00)', joiningDate: '2022-09-01', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
-    { employeeId: 'NCGR-1008', name: 'Aisha Rahman', role: 'Service Desk Lead', tower: 'Service Desk', department: 'Service Management', position: 'Team Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 416 8293', email: 'aisha.rahman@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-02-01', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Service Desk Operations' },
-    { employeeId: 'NCGR-1009', name: 'Arjun Menon', role: 'Automation Engineer', tower: 'Applications', department: 'Digital Transformation', position: 'Engineer', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 56 729 3154', email: 'arjun.menon@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-07-15', nationality: 'Indian', expatLocal: 'Expat', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
-    { employeeId: 'NCGR-1010', name: 'Noura Al-Qahtani', role: 'Program Manager', tower: 'Service Desk', department: 'PMO', position: 'Manager', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 831 4627', email: 'noura.alqahtani@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2022-01-10', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
-    { employeeId: 'NCGR-1011', name: 'Rakesh Kumar', role: 'Infrastructure Engineer', tower: 'Infrastructure', department: 'Infrastructure', position: 'Engineer', location: 'Riyadh DR', manager: 'Ahmed Al-Qahtani', mobile: '+966 54 316 7825', email: 'rakesh.kumar@demo.ncgr.local', status: 'Active', shift: 'Evening (14:00-22:00)', joiningDate: '2023-05-18', nationality: 'Indian', expatLocal: 'Expat', employmentType: 'Full-Time', currentAssignment: 'NCGR Infrastructure Program' },
-    { employeeId: 'NCGR-1012', name: 'Layla Hassan', role: 'Digital Workplace Engineer', tower: 'Digital Workplace', department: 'IT Operations', position: 'Engineer', location: 'Riyadh Primary', manager: 'Ahmed Al-Qahtani', mobile: '+966 55 692 4173', email: 'layla.hassan@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-08-01', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR Digital Workplace' },
-    { employeeId: 'NCGR-1013', name: 'Daniel Mathew', role: 'Security Engineer', tower: 'Security', department: 'Cyber Security', position: 'Engineer', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 56 483 9217', email: 'daniel.mathew@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-06-01', nationality: 'Indian', expatLocal: 'Expat', employmentType: 'Full-Time', currentAssignment: 'NCGR Security Operations' },
-    { employeeId: 'NCGR-1014', name: 'Huda Al-Salem', role: 'Change Manager', tower: 'Service Desk', department: 'Service Management', position: 'Manager', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 54 817 3264', email: 'huda.alsalem@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2022-11-15', nationality: 'Saudi', expatLocal: 'Local', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
-    { employeeId: 'NCGR-1015', name: 'Vivek Srinivasan', role: 'PMO Analyst', tower: 'Service Desk', department: 'PMO', position: 'Analyst', location: 'Riyadh Primary', manager: 'Noura Al-Qahtani', mobile: '+966 55 374 8291', email: 'vivek.srinivasan@demo.ncgr.local', status: 'Active', shift: 'Morning (06:00-14:00)', joiningDate: '2023-09-01', nationality: 'Indian', expatLocal: 'Expat', employmentType: 'Full-Time', currentAssignment: 'NCGR ITMS Operations' },
+  // Gender for leadership: Sara, Aisha, Priya, Noura, Layla, Huda are Female
+  const leadershipFemaleNames = new Set(['Sara Al-Otaibi', 'Aisha Rahman', 'Priya Nair', 'Noura Al-Qahtani', 'Layla Hassan', 'Huda Al-Salem']);
+  const leadershipBase = [
+    { employeeId: 'NCGR-1001', name: 'Faisal Al-Harbi', role: 'ITMS Service Delivery Manager', tower: 'Service Desk', department: 'Service Management', position: 'Manager', location: 'Riyadh Primary', manager: 'Executive Leadership', mobile: '+966 55 284 7316', email: 'faisal.alharbi@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2022-03-15', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
+    { employeeId: 'NCGR-1002', name: 'Ahmed Al-Qahtani', role: 'Infrastructure Operations Lead', tower: 'Infrastructure', department: 'Infrastructure', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 54 671 9284', email: 'ahmed.alqahtani@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2022-05-01', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Infrastructure Program' },
+    { employeeId: 'NCGR-1003', name: 'Mohammed Al-Dosari', role: 'Network Operations Lead', tower: 'Network', department: 'Infrastructure', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 50 394 6158', email: 'mohammed.aldosari@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2022-06-10', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Network Operations' },
+    { employeeId: 'NCGR-1004', name: 'Sara Al-Otaibi', role: 'Application Support Lead', tower: 'Applications', department: 'Applications', position: 'Operations Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 728 4163', email: 'sara.alotaibi@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-01-15', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Application Services' },
+    { employeeId: 'NCGR-1005', name: 'Khalid Al-Shammari', role: 'NOC Senior Engineer', tower: 'Network', department: 'IT Operations', position: 'Senior Engineer', location: 'Riyadh Primary', manager: 'Mohammed Al-Dosari', mobile: '+966 53 641 9275', email: 'khalid.alshammari@demo.ncgr.local', status: 'Active' as const, shift: 'Night (22:00-06:00)' as const, joiningDate: '2023-03-20', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Network Operations' },
+    { employeeId: 'NCGR-1006', name: 'Priya Nair', role: 'Cloud Engineer', tower: 'Cloud', department: 'Infrastructure', position: 'Engineer', location: 'Riyadh Primary', manager: 'Ahmed Al-Qahtani', mobile: '+966 56 318 4729', email: 'priya.nair@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-04-12', nationality: 'Indian', expatLocal: 'Expat' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Cloud Migration' },
+    { employeeId: 'NCGR-1007', name: 'Omar Al-Mutairi', role: 'Database Administrator', tower: 'Database', department: 'Infrastructure', position: 'Administrator', location: 'Riyadh DR', manager: 'Ahmed Al-Qahtani', mobile: '+966 54 285 7319', email: 'omar.almutairi@demo.ncgr.local', status: 'Active' as const, shift: 'Evening (14:00-22:00)' as const, joiningDate: '2022-09-01', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
+    { employeeId: 'NCGR-1008', name: 'Aisha Rahman', role: 'Service Desk Lead', tower: 'Service Desk', department: 'Service Management', position: 'Team Lead', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 416 8293', email: 'aisha.rahman@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-02-01', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Service Desk Operations' },
+    { employeeId: 'NCGR-1009', name: 'Arjun Menon', role: 'Automation Engineer', tower: 'Applications', department: 'Digital Transformation', position: 'Engineer', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 56 729 3154', email: 'arjun.menon@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-07-15', nationality: 'Indian', expatLocal: 'Expat' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
+    { employeeId: 'NCGR-1010', name: 'Noura Al-Qahtani', role: 'Program Manager', tower: 'Service Desk', department: 'PMO', position: 'Manager', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 55 831 4627', email: 'noura.alqahtani@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2022-01-10', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
+    { employeeId: 'NCGR-1011', name: 'Rakesh Kumar', role: 'Infrastructure Engineer', tower: 'Infrastructure', department: 'Infrastructure', position: 'Engineer', location: 'Riyadh DR', manager: 'Ahmed Al-Qahtani', mobile: '+966 54 316 7825', email: 'rakesh.kumar@demo.ncgr.local', status: 'Active' as const, shift: 'Evening (14:00-22:00)' as const, joiningDate: '2023-05-18', nationality: 'Indian', expatLocal: 'Expat' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Infrastructure Program' },
+    { employeeId: 'NCGR-1012', name: 'Layla Hassan', role: 'Digital Workplace Engineer', tower: 'Digital Workplace', department: 'IT Operations', position: 'Engineer', location: 'Riyadh Primary', manager: 'Ahmed Al-Qahtani', mobile: '+966 55 692 4173', email: 'layla.hassan@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-08-01', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Digital Workplace' },
+    { employeeId: 'NCGR-1013', name: 'Daniel Mathew', role: 'Security Engineer', tower: 'Security', department: 'Cyber Security', position: 'Engineer', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 56 483 9217', email: 'daniel.mathew@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-06-01', nationality: 'Indian', expatLocal: 'Expat' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR Security Operations' },
+    { employeeId: 'NCGR-1014', name: 'Huda Al-Salem', role: 'Change Manager', tower: 'Service Desk', department: 'Service Management', position: 'Manager', location: 'Riyadh Primary', manager: 'Faisal Al-Harbi', mobile: '+966 54 817 3264', email: 'huda.alsalem@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2022-11-15', nationality: 'Saudi', expatLocal: 'Local' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
+    { employeeId: 'NCGR-1015', name: 'Vivek Srinivasan', role: 'PMO Analyst', tower: 'Service Desk', department: 'PMO', position: 'Analyst', location: 'Riyadh Primary', manager: 'Noura Al-Qahtani', mobile: '+966 55 374 8291', email: 'vivek.srinivasan@demo.ncgr.local', status: 'Active' as const, shift: 'Morning (06:00-14:00)' as const, joiningDate: '2023-09-01', nationality: 'Indian', expatLocal: 'Expat' as const, employmentType: 'Full-Time' as const, currentAssignment: 'NCGR ITMS Operations' },
   ];
+
+  const leadership: MasterEmployee[] = leadershipBase.map((l, idx) => ({
+    ...l,
+    locationBucket: getTowerLocationBucket(l.tower, l.department),
+    roleHistory: generateRoleHistory(idx, l.role, l.joiningDate, l.name),
+    level: getPositionLevel(l.position),
+    gender: leadershipFemaleNames.has(l.name) ? 'Female' as const : 'Male' as const,
+  }));
+
   employees.push(...leadership);
   idCounter = 1016;
 
@@ -105,9 +302,12 @@ function generateEmployees(): MasterEmployee[] {
   };
 
   for (const dist of towerDistribution) {
+    const bucket = getTowerLocationBucket(dist.tower, dist.department);
+    const localRate = domainLocalRate[bucket] ?? 0.65;
+
     for (let i = 0; i < dist.count; i++) {
-      const isExpat = Math.random() < 0.35;
-      const isFemale = Math.random() < 0.3;
+      const isExpat = rng() >= localRate;
+      const isFemale = rng() < 0.3;
       let name: string;
       if (isExpat) {
         const first = isFemale
@@ -132,6 +332,7 @@ function generateEmployees(): MasterEmployee[] {
       const month = String(1 + ((idCounter + i) % 12)).padStart(2, '0');
       const day = String(1 + ((idCounter + i) % 28)).padStart(2, '0');
       const emailName = name.toLowerCase().replace(/[^a-z ]/g, '').replace(/ /g, '.');
+      const empTypeSeed = rng();
 
       employees.push({
         employeeId: `NCGR-${idCounter}`,
@@ -147,10 +348,14 @@ function generateEmployees(): MasterEmployee[] {
         status,
         shift,
         joiningDate: `${year}-${month}-${day}`,
-        nationality: isExpat ? (Math.random() < 0.7 ? 'Indian' : 'Pakistani') : 'Saudi',
+        nationality: isExpat ? (rng() < 0.7 ? 'Indian' : 'Pakistani') : 'Saudi',
         expatLocal: isExpat ? 'Expat' : 'Local',
-        employmentType: Math.random() < 0.1 ? 'Contract' : Math.random() < 0.05 ? 'Consultant' : 'Full-Time',
+        employmentType: empTypeSeed < 0.1 ? 'Contract' : empTypeSeed < 0.15 ? 'Consultant' : 'Full-Time',
         currentAssignment: assignments[(idCounter + i) % assignments.length],
+        locationBucket: bucket,
+        roleHistory: generateRoleHistory(idCounter - 1001, role, `${year}-${month}-${day}`, name),
+        level: getPositionLevel(pos),
+        gender: isFemale ? 'Female' : 'Male',
       });
       idCounter++;
     }
@@ -160,6 +365,41 @@ function generateEmployees(): MasterEmployee[] {
 }
 
 export const masterEmployees: MasterEmployee[] = generateEmployees();
+
+// ─── SAUDIZATION HELPERS ──────────────────────────────────────
+export interface SaudizationDomainStat {
+  locationBucket: string;
+  totalCount: number;
+  saudiCount: number;
+  targetPct: number;
+  actualPct: number;
+  status: 'OK' | 'NOT OK';
+}
+
+/**
+ * Returns per-domain Saudization stats. For the domain-level Target/Actual/%/Status,
+ * the approved figures from SAUDIZATION_TARGETS are authoritative (Section 4).
+ * The Saudi/Total counts come from the actual employee dataset.
+ */
+export function getSaudizationStats(): { domains: SaudizationDomainStat[]; overallPct: number; overallSaudiCount: number; overallTotal: number } {
+  const totalSaudi = masterEmployees.filter(e => e.expatLocal === 'Local').length;
+  const overallPct = masterEmployees.length > 0 ? Math.round((totalSaudi / masterEmployees.length) * 100) : 0;
+
+  const domains: SaudizationDomainStat[] = SAUDIZATION_TARGETS.map(t => {
+    const domainEmps = masterEmployees.filter(e => e.locationBucket === t.locationBucket);
+    const domainSaudi = domainEmps.filter(e => e.expatLocal === 'Local').length;
+    return {
+      locationBucket: t.locationBucket,
+      totalCount: domainEmps.length,
+      saudiCount: domainSaudi,
+      targetPct: t.targetPct,
+      actualPct: t.actualPct, // Authoritative approved figure
+      status: t.status,
+    };
+  });
+
+  return { domains, overallPct, overallSaudiCount: totalSaudi, overallTotal: masterEmployees.length };
+}
 
 // Helper to get employee by ID
 export function getEmployeeById(id: string): MasterEmployee | undefined {

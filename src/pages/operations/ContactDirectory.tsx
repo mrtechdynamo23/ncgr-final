@@ -4,6 +4,8 @@ import DataTable, { type ColumnDef, type FilterDef } from '../../components/comm
 import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
 import type { MasterEmployee } from '../../data/master-employees';
 import { Phone, Mail, Eye, EyeOff } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { TEAM_OVERVIEW_SIBLINGS } from './TeamOverviewLandingPage';
 
 const ContactDirectory: React.FC = () => {
   const { employees } = useDataStore();
@@ -215,15 +217,13 @@ const ContactDirectory: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Contact Directory
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          355+ operational engineers, shift leads, tower managers, and on-call escalation directory with phone privacy masking
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Team Overview"
+        modulePath="/team-overview"
+        pageTitle="Contact Directory"
+        siblingPages={TEAM_OVERVIEW_SIBLINGS}
+      />
 
       {/* Main DataTable */}
       <DataTable

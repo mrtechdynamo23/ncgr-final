@@ -131,9 +131,6 @@ const LicenseHealth: React.FC = () => {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
           License & Entitlement Health
         </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Central software license portfolio, entitlement utilization, contract expiry tracking, and annual financial cost analysis
-        </p>
       </div>
 
       {/* KPI Cards Strip */}

@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import NCGRLogo from '../components/common/NCGRLogo';
-import { ShieldCheck, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Lock, ArrowRight, ArrowLeft, AlertCircle, Eye, EyeOff, Check, Globe } from 'lucide-react';
+import './LandingPage.css';
 
-const LoginPage: React.FC = () => {
+export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const { i18n } = useTranslation();
+  const isRtl = i18n.language === 'ar';
 
-  const from = (location.state as any)?.from?.pathname || '/';
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [errorKey, setErrorKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,166 +27,160 @@ const LoginPage: React.FC = () => {
     setTimeout(() => {
       const success = login(password);
       if (success) {
-        navigate(from, { replace: true });
+        setIsSuccess(true);
+        setTimeout(() => {
+          navigate('/welcome', { replace: true });
+        }, 750);
       } else {
-        setError('Invalid Security Access Code. Please enter the authorized NCGR password.');
+        setError(
+          isRtl
+            ? 'رمز الدخول غير صالح. يرجى إدخال كلمة المرور المصرح بها للمركز الوطني لنظم الموارد الحكومية.'
+            : 'Invalid access code. Please enter the authorized NCGR security password.'
+        );
+        setErrorKey(k => k + 1);
         setIsLoading(false);
       }
-    }, 300);
+    }, 350);
+  };
+
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(newLang);
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = newLang;
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        width: '100vw',
-        background: 'linear-gradient(135deg, #0A1628 0%, #074A76 50%, #05263F 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
+    <div className={`login-root ${isRtl ? 'rtl' : 'ltr'} ${isSuccess ? 'login-transitioning' : ''}`}>
+      {/* ─── ARCHITECTURAL BACKDROP WITH CONTROLLED ATMOSPHERIC GRADIENT ── */}
       <div
-        style={{
-          width: '100%',
-          maxWidth: 440,
-          background: 'var(--card-bg, #FFFFFF)',
-          borderRadius: 16,
-          boxShadow: '0 20px 50px rgba(0,0,0,0.4)',
-          overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        }}
+        className="login-backdrop-image"
+        style={{ backgroundImage: `url('/assets/landing/hero-kafd-01.jpg')` }}
+        aria-hidden="true"
       >
-        {/* Top Header Card */}
-        <div
-          style={{
-            padding: '32px 28px 24px',
-            textAlign: 'center',
-            background: 'linear-gradient(180deg, #FFFFFF 0%, #F4F7F6 100%)',
-            borderBottom: '1px solid #E2E8F0',
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <NCGRLogo height={48} variant="full" />
-          </div>
-          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#074A76', margin: 0, letterSpacing: '-0.01em' }}>
-            NCGR ITMS Executive Dashboard
-          </h1>
-          <p style={{ fontSize: '0.8125rem', color: '#64748B', marginTop: 6, margin: '6px 0 0' }}>
-            Enterprise Operational Assurance & Management Portal
-          </p>
+        <div className="login-backdrop-overlay" />
+        <div className="login-backdrop-grid" />
+      </div>
+
+      {/* ─── TOP HEADER BAR ─────────────────────────────────────────── */}
+      <header className="login-top-bar">
+        <div className="login-top-brand">
+          <NCGRLogo height={32} variant="white" />
+          <div className="login-top-divider" />
+          <span className="login-top-title">
+            {isRtl ? 'بوابة إدارة تقنية المعلومات الموحدة' : 'Unified IT Management Portal'}
+          </span>
         </div>
 
-        {/* Form Area */}
-        <div style={{ padding: '28px 28px 32px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              background: 'rgba(64, 144, 79, 0.1)',
-              border: '1px solid rgba(64, 144, 79, 0.3)',
-              borderRadius: 6,
-              fontSize: '0.75rem',
-              color: '#40904F',
-              fontWeight: 600,
-              marginBottom: 20,
-            }}
-          >
-            <ShieldCheck size={16} />
-            <span>RESTRICTED ACCESS — AUTHORIZED PERSONNEL ONLY</span>
-          </div>
+        <button
+          className="login-lang-btn"
+          onClick={toggleLanguage}
+          aria-label={isRtl ? 'Switch to English' : 'التحويل إلى العربية'}
+        >
+          <Globe size={13} />
+          <span>{isRtl ? 'English' : 'العربية'}</span>
+        </button>
+      </header>
 
-          {error && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                background: '#FEE2E2',
-                border: '1px solid #FCA5A5',
-                borderRadius: 6,
-                color: '#991B1B',
-                fontSize: '0.8125rem',
-                marginBottom: 20,
-              }}
-            >
-              <AlertCircle size={16} style={{ flexShrink: 0 }} />
-              <span>{error}</span>
+      {/* ─── FLOATING EXECUTIVE AUTHENTICATION PANEL ─────────────────── */}
+      <main className="login-main-container">
+        <div className="login-auth-card">
+          {/* Success Overlay Animation */}
+          {isSuccess && (
+            <div className="login-success-overlay">
+              <div className="login-success-icon-wrap">
+                <Check size={28} />
+              </div>
+              <h3 className="login-success-title">
+                {isRtl ? 'تم التحقق من الصلاحيات' : 'Access Authorized'}
+              </h3>
+              <p className="login-success-sub">
+                {isRtl ? 'جاري الانتقال إلى المنظومة التنفيذية...' : 'Entering executive operating environment...'}
+              </p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 20 }}>
-              <label
-                htmlFor="security-password"
-                style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text, #1E293B)', marginBottom: 8 }}
-              >
-                Security Access Code / Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Lock
-                  size={18}
-                  style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }}
-                />
-                <input
-                  id="security-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter security access password"
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 14px 12px 40px',
-                    fontSize: '0.9375rem',
-                    borderRadius: 8,
-                    border: '1px solid #CBD5E1',
-                    background: '#FFFFFF',
-                    color: '#0F172A',
-                    boxSizing: 'border-box',
-                    outline: 'none',
-                  }}
-                />
-              </div>
+          {/* Card Header */}
+          <div className="login-card-header">
+            <div className="login-card-logo">
+              <NCGRLogo height={42} variant="full" />
+            </div>
+            <h1 className="login-card-title">
+              {isRtl ? 'المركز الوطني لنظم الموارد الحكومية' : 'NCGR Unified IT Management Portal'}
+            </h1>
+            <p className="login-card-subtitle">
+              {isRtl ? 'الدخول التنفيذي المؤمن' : 'Secure Executive Access'}
+            </p>
+          </div>
+
+          {/* Card Body */}
+          <div className="login-card-body">
+            <div className="login-secure-notice">
+              <ShieldCheck size={15} />
+              <span>
+                {isRtl
+                  ? 'وصول مصرح به إلى عمليات تقنية المعلومات، والحوكمة، والكوادر الوطنية.'
+                  : 'Authorized access to integrated IT operations, governance and workforce management.'}
+              </span>
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '12px 20px',
-                fontSize: '0.9375rem',
-                fontWeight: 700,
-                color: '#FFFFFF',
-                background: 'linear-gradient(135deg, #40904F 0%, #2E6B39 100%)',
-                border: 'none',
-                borderRadius: 8,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                boxShadow: '0 4px 12px rgba(64, 144, 79, 0.3)',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {isLoading ? 'Authenticating...' : 'Sign In to ITMS Portal'}
-              {!isLoading && <ArrowRight size={18} />}
-            </button>
-          </form>
+            {error && (
+              <div className="login-error-box login-error-shake" key={errorKey} role="alert">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
 
-          <div style={{ marginTop: 24, textAlign: 'center', fontSize: '0.75rem', color: '#94A3B8' }}>
-            National Center for Government Resources (NCGR) © 2026<br />
-            Protected by Enterprise Access Assurance Layer
+            <form onSubmit={handleSubmit} className="login-form">
+              <label htmlFor="security-access-password" className="login-label">
+                {isRtl ? 'رمز الدخول الأمني' : 'Security Access Code'}
+              </label>
+
+              <div className="login-input-wrapper">
+                <div className="login-input-icon">
+                  <Lock size={17} />
+                </div>
+                <input
+                  id="security-access-password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={isRtl ? 'أدخل كلمة المرور الأمنية' : 'Enter security access password'}
+                  required
+                  autoFocus
+                  className="login-input"
+                  aria-describedby="login-access-hint"
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  tabIndex={0}
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || isSuccess}
+                className="login-submit-button"
+              >
+                <span>{isLoading ? (isRtl ? 'جاري التحقق…' : 'Authenticating…') : (isRtl ? 'متابعة الدخول بأمان' : 'Continue Securely')}</span>
+                {!isLoading && (isRtl ? <ArrowLeft size={17} /> : <ArrowRight size={17} />)}
+              </button>
+            </form>
+
+            <div className="login-card-footer">
+              <span>{isRtl ? 'المركز الوطني لنظم الموارد الحكومية (NCGR) © 2026' : 'National Center for Government Resources (NCGR) © 2026'}</span>
+              <span className="login-card-footer-sub">
+                {isRtl ? 'محمي بواسطة طبقة التحقق والوصول المؤسسي' : 'Protected by Enterprise Access Assurance Layer'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -3,6 +3,8 @@ import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import type { LeaveRecord } from '../../data/master-employees';
 import { Check, X, UserCheck, CheckCircle2 } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { TEAM_OVERVIEW_SIBLINGS } from './TeamOverviewLandingPage';
 
 const LeaveManagement: React.FC = () => {
   const { leaveRecords, approveLeave, rejectLeave } = useDataStore();
@@ -217,15 +219,13 @@ const LeaveManagement: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Page Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Leave Management & Approvals
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Workforce availability assurance, leave workflow transitions, and standby resource backup coverage
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Team Overview"
+        modulePath="/team-overview"
+        pageTitle="Leave Management"
+        siblingPages={TEAM_OVERVIEW_SIBLINGS}
+      />
 
       {/* Real-time Feedback Toast */}
       {feedbackMessage && (

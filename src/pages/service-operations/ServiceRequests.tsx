@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import type { ServiceRequest } from '../../data/serviceRequests';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from './CommandCenterLandingPage';
 
 const ServiceRequests: React.FC = () => {
   const { serviceRequests } = useDataStore();
+  const [filteredRequests, setFilteredRequests] = useState<ServiceRequest[]>(serviceRequests);
 
-  const openCount = serviceRequests.filter(r => r.status === 'Open' || r.status === 'In Progress').length;
-  const fulfilledCount = serviceRequests.filter(r => r.status === 'Fulfilled' || r.status === 'Closed').length;
-  const highPriorityCount = serviceRequests.filter(r => r.priority === 'Critical' || r.priority === 'High').length;
+  const totalRequests = filteredRequests.length;
+  const openCount = filteredRequests.filter(r => r.status === 'Open' || r.status === 'In Progress').length;
+  const fulfilledCount = filteredRequests.filter(r => r.status === 'Fulfilled' || r.status === 'Closed').length;
+  const highPriorityCount = filteredRequests.filter(r => r.priority === 'Critical' || r.priority === 'High').length;
 
   const columns: ColumnDef<ServiceRequest>[] = [
     {
@@ -123,9 +127,9 @@ const ServiceRequests: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(serviceRequests.map(e => e.tower))).map(t => ({ label: t, value: t }));
-  const uniqueTypes = Array.from(new Set(serviceRequests.map(e => e.requestType))).map(t => ({ label: t, value: t }));
-  const uniqueDepts = Array.from(new Set(serviceRequests.map(e => e.department))).map(d => ({ label: d, value: d }));
+  const uniqueTowers = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
+  const uniqueTypes = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.requestType))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
+  const uniqueDepts = Array.from(new Set(serviceRequests.map((e: ServiceRequest) => e.department))).filter(Boolean).map(d => ({ label: String(d), value: String(d) }));
 
   const filters: FilterDef<ServiceRequest>[] = [
     { key: 'tower', label: 'Towers', options: uniqueTowers },
@@ -145,15 +149,13 @@ const ServiceRequests: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Service Request Management
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          User access provisioning, hardware catalog requests, software licenses, cloud quotas, and fulfillment queues
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Service Requests"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div
@@ -166,8 +168,10 @@ const ServiceRequests: React.FC = () => {
       >
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Requests</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{serviceRequests.length}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Service catalog tickets</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{totalRequests}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            {totalRequests === serviceRequests.length ? 'Service catalog tickets' : `Filtered (${totalRequests} of ${serviceRequests.length})`}
+          </div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
@@ -179,13 +183,13 @@ const ServiceRequests: React.FC = () => {
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Fulfilled / Closed</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{fulfilledCount}</div>
-          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Customer confirmed</div>
+          <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>100% Completed</div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>High Priority Quotas</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>High Priority</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{highPriorityCount}</div>
-          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Expedited queue</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>VIP & Critical queue</div>
         </div>
       </div>
 
@@ -194,6 +198,7 @@ const ServiceRequests: React.FC = () => {
         data={serviceRequests}
         columns={columns}
         filters={filters}
+        onFilteredDataChange={setFilteredRequests}
         searchPlaceholder="Search requests by ID, user, department, catalog item..."
         searchKeys={['id', 'requestedBy', 'department', 'catalogItem', 'requestType', 'assignedEngineer']}
         pageSize={15}

@@ -87,5 +87,26 @@
     "location": "Location",
     "lead": "Lead",
     "coverage": "Coverage"
+  },
+  "slaPredictive": {
+    "title": "SLA Predictive Analysis",
+    "subtitle": "Forward-looking assessment of SLA assurance based on current performance and available operational evidence.",
+    "currentAssurance": "Current SLA Assurance",
+    "target": "Current Target",
+    "forecastAssurance": "Next-Period Forecast",
+    "forecastStatus": "Forecast Status",
+    "confidence": "Forecast Confidence",
+    "onTrack": "On Track",
+    "watch": "Watch",
+    "atRisk": "At Risk",
+    "insufficientEvidence": "Insufficient Evidence",
+    "highestFutureRisk": "Highest Future Risk",
+    "mostLikelyToImprove": "Most Likely to Improve",
+    "whyExplanation": "Why Is This SLA at Risk?",
+    "keyDrivers": "Key Operational Drivers",
+    "recommendedAction": "Recommended Action",
+    "viewInSla": "View in SLA Management",
+    "methodologyTitle": "Forecast Methodology & Auditability",
+    "methodologyDesc": "Evidence-based trend assessment using current SLA performance, available historical measurements, target logic, measurement confidence, evidence completeness and reporting cadence."
   }
 }

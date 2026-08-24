@@ -2,15 +2,18 @@ import React, { useState } from 'react';
 import { knowledgeDocs, type KnowledgeDocument } from '../../data/knowledge';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from '../service-operations/CommandCenterLandingPage';
 
 const KnowledgeBase: React.FC = () => {
   const [selectedDoc, setSelectedDoc] = useState<KnowledgeDocument | null>(null);
+  const [filteredDocs, setFilteredDocs] = useState<KnowledgeDocument[]>(knowledgeDocs);
 
-  const sopCount = knowledgeDocs.filter(d => d.category === 'SOP').length;
-  const runbookCount = knowledgeDocs.filter(d => d.category === 'Runbook').length;
-  const architectureCount = knowledgeDocs.filter(d => d.category === 'Architecture').length;
-  const kedbCount = knowledgeDocs.filter(d => d.category === 'Policy' || d.category === 'How-To').length;
-
+  const totalDocs = filteredDocs.length;
+  const sopCount = filteredDocs.filter(d => d.category === 'SOP').length;
+  const runbookCount = filteredDocs.filter(d => d.category === 'Runbook').length;
+  const architectureCount = filteredDocs.filter(d => d.category === 'Architecture').length;
+  const kedbCount = filteredDocs.filter(d => d.category === 'Policy' || d.category === 'How-To').length;
 
   const columns: ColumnDef<KnowledgeDocument>[] = [
     {
@@ -95,15 +98,13 @@ const KnowledgeBase: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Knowledge Base Repository
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Central operational knowledge management, standard operating procedures (SOP), disaster recovery runbooks, and enterprise architectures
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Knowledge Base & Repository"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div
@@ -116,8 +117,10 @@ const KnowledgeBase: React.FC = () => {
       >
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Articles</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{knowledgeDocs.length}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Verified documents</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{totalDocs}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            {totalDocs === knowledgeDocs.length ? 'Verified documents' : `Filtered (${totalDocs} of ${knowledgeDocs.length})`}
+          </div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
@@ -144,6 +147,7 @@ const KnowledgeBase: React.FC = () => {
         data={knowledgeDocs}
         columns={columns}
         filters={filters}
+        onFilteredDataChange={setFilteredDocs}
         searchPlaceholder="Search knowledge base by title, summary, tags, owner..."
         searchKeys={['title', 'summary', 'owner', 'category', 'id']}
         pageSize={10}

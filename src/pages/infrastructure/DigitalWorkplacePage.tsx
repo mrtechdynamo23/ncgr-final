@@ -1,5 +1,7 @@
 import React from 'react';
 import DataTable, { type ColumnDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { INFRASTRUCTURE_SIBLINGS } from './InfrastructureLandingPage';
 
 interface WorkplaceDeviceGroup {
   id: string;
@@ -122,15 +124,13 @@ const DigitalWorkplacePage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Digital Workplace & End-User Computing
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Managed laptops, Citrix VDI pools, Intune mobile MDM, Teams meeting rooms, and endpoint security compliance
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Infrastructure Health"
+        modulePath="/infrastructure"
+        pageTitle="Digital Workplace"
+        siblingPages={INFRASTRUCTURE_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { masterApplications } from '../../data/master-applications';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
 import { Search } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { APPLICATION_SERVICES_SIBLINGS } from './ApplicationServicesLandingPage';
 
 const ApplicationPerformancePage: React.FC = () => {
-  const { t } = useTranslation('common');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
 
@@ -16,16 +16,14 @@ const ApplicationPerformancePage: React.FC = () => {
   );
 
   return (
-    <div>
-      <div className="page-header">
-        <div className="page-header-top">
-          <div>
-            <h1 className="page-title">Application Performance & APM Telemetry</h1>
-            <p className="page-subtitle">AppDynamics APM Sensors, Transaction Latency, Error Rates & Hourly Throughput</p>
-          </div>
-          <span className="simulated-badge">{t('app.demoData')}</span>
-        </div>
-      </div>
+    <div className="page-container" style={{ paddingBottom: 40 }}>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Application Services"
+        modulePath="/applications"
+        pageTitle="Application Performance"
+        siblingPages={APPLICATION_SERVICES_SIBLINGS}
+      />
 
       {/* KPI Overview (Module 8 Spec) */}
       <div className="kpi-grid" style={{ marginBottom: 24 }}>

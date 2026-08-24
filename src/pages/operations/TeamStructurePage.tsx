@@ -7,6 +7,8 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   Tooltip, CartesianGrid, PieChart, Pie, Cell
 } from 'recharts';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { TEAM_OVERVIEW_SIBLINGS } from './TeamOverviewLandingPage';
 
 const COLORS = ['#074A76', '#40904F', '#4AA6DC', '#671E75', '#E97F0A', '#1FBBB0', '#CFDB51', '#CE813C', '#22A06B'];
 
@@ -15,6 +17,7 @@ const TeamStructurePage: React.FC = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<MasterEmployee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTowerFilter, setSelectedTowerFilter] = useState<string>('All');
+  const [activeDeptIndex, setActiveDeptIndex] = useState<number | null>(null);
 
   // Headcount by Tower
   const towerData = useMemo(() => {
@@ -40,10 +43,14 @@ const TeamStructurePage: React.FC = () => {
     employees.forEach(e => {
       counts[e.department] = (counts[e.department] || 0) + 1;
     });
-    return Object.entries(counts).map(([department, count]) => ({
-      name: department,
-      value: count,
-    }));
+    const total = employees.length || 1;
+    return Object.entries(counts)
+      .map(([department, count]) => ({
+        name: department,
+        value: count,
+        percentage: (count / total) * 100,
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [employees]);
 
   // Key Tower Leads (Managers)
@@ -69,15 +76,13 @@ const TeamStructurePage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 48 }}>
-      {/* Page Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Team Structure & Organizational Hierarchy
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Organizational layout across 9 operational towers, departments, and tower leadership tiers
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Team Overview"
+        modulePath="/team-overview"
+        pageTitle="Team Structure"
+        siblingPages={TEAM_OVERVIEW_SIBLINGS}
+      />
 
       {/* ─── SUMMARY KPI STRIP ───────────────────────────────── */}
       <div
@@ -134,6 +139,8 @@ const TeamStructurePage: React.FC = () => {
             borderRadius: 12,
             background: 'var(--card-bg, #FFFFFF)',
             border: '1px solid var(--border, #E4E7EC)',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
           <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #101828)' }}>
@@ -157,7 +164,7 @@ const TeamStructurePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Department Breakdown Pie Chart */}
+        {/* Department Breakdown Card */}
         <div
           className="card"
           style={{
@@ -165,34 +172,239 @@ const TeamStructurePage: React.FC = () => {
             borderRadius: 12,
             background: 'var(--card-bg, #FFFFFF)',
             border: '1px solid var(--border, #E4E7EC)',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #101828)' }}>
-            Distribution by Department
-          </h3>
-          <p style={{ margin: '0 0 16px', fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>
-            Proportionate workforce breakdown by functional organizational division
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px', fontSize: '1rem', fontWeight: 700, color: 'var(--text, #101828)' }}>
+                Distribution by Department
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>
+                Proportionate workforce breakdown by functional organizational division
+              </p>
+            </div>
+            <span
+              style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                padding: '3px 8px',
+                borderRadius: 12,
+                background: 'rgba(7, 74, 118, 0.08)',
+                color: 'var(--ncgr-deep-blue, #074A76)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {departmentData.length} Divisions
+            </span>
+          </div>
 
-          <div style={{ height: 260, width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={departmentData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={90}
-                  innerRadius={45}
-                  label={({ name, percent }: { name?: string; percent?: number }) => `${(name || '').substring(0, 12)} (${((percent || 0) * 100).toFixed(0)}%)`}
-                  labelLine={false}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '170px 1fr',
+              gap: 16,
+              alignItems: 'center',
+              flex: 1,
+              minHeight: 240,
+            }}
+          >
+            {/* Donut Chart with Center Metric */}
+            <div style={{ position: 'relative', width: 170, height: 210, margin: '0 auto' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={departmentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    cornerRadius={4}
+                    dataKey="value"
+                    onMouseEnter={(_, idx) => setActiveDeptIndex(idx)}
+                    onMouseLeave={() => setActiveDeptIndex(null)}
+                  >
+                    {departmentData.map((_entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                        opacity={activeDeptIndex === null || activeDeptIndex === index ? 1 : 0.35}
+                        stroke="var(--card-bg, #FFFFFF)"
+                        strokeWidth={2}
+                        style={{ cursor: 'pointer', transition: 'opacity 0.2s ease' }}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div
+                            style={{
+                              background: 'var(--surface-raised, #FFFFFF)',
+                              border: '1px solid var(--border, #E4E7EC)',
+                              padding: '8px 12px',
+                              borderRadius: 8,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                              fontSize: 12,
+                            }}
+                          >
+                            <div style={{ fontWeight: 700, color: 'var(--text, #101828)', marginBottom: 2 }}>
+                              {data.name}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary, #475467)' }}>
+                              <span>{data.value} Staff</span>
+                              <span>•</span>
+                              <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)' }}>
+                                {data.percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+
+              {/* Centered Donut Metric / Text */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  textAlign: 'center',
+                  pointerEvents: 'none',
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: 800,
+                    color: activeDeptIndex !== null ? COLORS[activeDeptIndex % COLORS.length] : 'var(--text, #101828)',
+                    lineHeight: 1.1,
+                    transition: 'color 0.2s ease',
+                  }}
                 >
-                  {departmentData.map((_entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ background: 'var(--surface-raised, #FFFFFF)', borderRadius: 8, borderColor: 'var(--border, #E4E7EC)', fontSize: 12 }} />
-              </PieChart>
-            </ResponsiveContainer>
+                  {activeDeptIndex !== null ? departmentData[activeDeptIndex].value : employees.length}
+                </div>
+                <div
+                  style={{
+                    fontSize: '0.625rem',
+                    fontWeight: 700,
+                    color: 'var(--text-tertiary, #98A2B3)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    marginTop: 2,
+                  }}
+                >
+                  {activeDeptIndex !== null ? 'Staff' : 'Total'}
+                </div>
+              </div>
+            </div>
+
+            {/* Department Breakdown Legend List */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 5,
+                maxHeight: 230,
+                overflowY: 'auto',
+                paddingRight: 4,
+              }}
+            >
+              {departmentData.map((dept, index) => {
+                const color = COLORS[index % COLORS.length];
+                const isHovered = activeDeptIndex === index;
+                return (
+                  <div
+                    key={dept.name}
+                    onMouseEnter={() => setActiveDeptIndex(index)}
+                    onMouseLeave={() => setActiveDeptIndex(null)}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                      background: isHovered ? 'var(--bg-secondary, #F7F8FA)' : 'transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      border: isHovered ? `1px solid ${color}40` : '1px solid transparent',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                        <span
+                          style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: color,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: '0.75rem',
+                            fontWeight: isHovered ? 700 : 600,
+                            color: 'var(--text, #101828)',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                          title={dept.name}
+                        >
+                          {dept.name}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text, #101828)' }}>
+                          {dept.value}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '0.6875rem',
+                            fontWeight: 700,
+                            color: color,
+                            background: `${color}15`,
+                            padding: '1px 5px',
+                            borderRadius: 4,
+                            minWidth: 34,
+                            textAlign: 'right',
+                          }}
+                        >
+                          {dept.percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Proportion bar */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: 3,
+                        borderRadius: 2,
+                        background: 'var(--border, #E4E7EC)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${dept.percentage}%`,
+                          height: '100%',
+                          background: color,
+                          borderRadius: 2,
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

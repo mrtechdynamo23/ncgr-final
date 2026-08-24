@@ -78,3 +78,115 @@ export function getAuditStats() {
   const inProgress = audits.filter(a => a.status === 'In Progress').length;
   return { total, open, closed, totalFindings, overdue, inProgress };
 }
+
+// ─── AUDIT FINDINGS DETAIL DATA ───────────────────────────────
+export interface AuditFinding {
+  findingId: string;
+  auditId: string;
+  finding: string;
+  owner: string;
+  date: string;
+  status: 'Open' | 'In Progress' | 'Remediated' | 'Accepted';
+  severity: 'Critical' | 'High' | 'Medium' | 'Low';
+  dueDate: string;
+  remarks: string;
+}
+
+const findingDescriptions = [
+  'Privileged account password rotation exceeds 90-day policy',
+  'Missing multi-factor authentication on admin console',
+  'Unpatched CVEs on production servers (>30 days)',
+  'Incomplete asset inventory for network switches',
+  'Service account with excessive privileges detected',
+  'Backup validation test not performed within SLA',
+  'Firewall rule permitting unrestricted outbound traffic',
+  'Change records missing rollback plan documentation',
+  'Stale user accounts not deactivated after termination',
+  'Encryption at rest not enabled on non-production DB',
+  'Incident RCA report delayed beyond 5-day SLA',
+  'Knowledge article review cycle overdue by 60 days',
+  'Missing segregation of duties in approval workflow',
+  'DR failover test not completed in current quarter',
+  'Vulnerability scan coverage below 95% threshold',
+  'Configuration drift detected on 12 server nodes',
+  'SSL certificate expiring within 30 days',
+  'CMDB CI accuracy below 90% data quality target',
+  'Access review for critical system not completed',
+  'Log retention policy not enforced on 3 platforms',
+];
+
+const findingOwners = [
+  'Daniel Mathew', 'Ahmed Al-Qahtani', 'Huda Al-Salem', 'Mohammed Al-Dosari',
+  'Sara Al-Otaibi', 'Arjun Menon', 'Priya Nair', 'Rakesh Kumar',
+  'Omar Al-Mutairi', 'Khalid Al-Shammari', 'Faisal Al-Harbi', 'Noura Al-Qahtani',
+];
+
+const findingSeverities: AuditFinding['severity'][] = ['Critical', 'High', 'Medium', 'Low'];
+const findingStatuses: AuditFinding['status'][] = ['Open', 'In Progress', 'Remediated', 'Accepted'];
+
+/**
+ * Generates detailed finding records for each audit based on its findingIds array.
+ * The number of findings exactly matches numberOfFindings for data integrity.
+ */
+export function generateAuditFindings(): AuditFinding[] {
+  const findings: AuditFinding[] = [];
+
+  for (const audit of audits) {
+    for (let i = 0; i < audit.findingIds.length; i++) {
+      const seed = parseInt(audit.findingIds[i].replace('F-', ''), 10);
+      const descIdx = (seed + i) % findingDescriptions.length;
+      const ownerIdx = (seed + i * 3) % findingOwners.length;
+      const sevIdx = (seed + i) % findingSeverities.length;
+      const statusIdx = audit.openClosed === 'Closed' ? 2 : (seed + i * 2) % findingStatuses.length;
+      const monthOffset = (seed % 3);
+      const dayOffset = 1 + (seed % 28);
+
+      findings.push({
+        findingId: audit.findingIds[i],
+        auditId: audit.id,
+        finding: findingDescriptions[descIdx],
+        owner: findingOwners[ownerIdx],
+        date: `2026-${String(6 + monthOffset).padStart(2, '0')}-${String(dayOffset).padStart(2, '0')}`,
+        status: findingStatuses[statusIdx],
+        severity: findingSeverities[sevIdx],
+        dueDate: `2026-${String(8 + monthOffset).padStart(2, '0')}-${String(dayOffset).padStart(2, '0')}`,
+        remarks: statusIdx === 2 ? 'Remediation verified and closed' : statusIdx === 1 ? 'Remediation in progress' : 'Pending owner action',
+      });
+    }
+  }
+
+  return findings;
+}
+
+export const auditFindings: AuditFinding[] = generateAuditFindings();
+
+/** Get findings for a specific audit */
+export function getFindingsForAudit(auditId: string): AuditFinding[] {
+  return auditFindings.filter(f => f.auditId === auditId);
+}
+
+// ─── UPCOMING AUDITS DATA ─────────────────────────────────────
+export interface UpcomingAudit {
+  id: string;
+  auditName: string;
+  auditType: 'Internal' | 'External';
+  assignedOwner: string;
+  plannedDate: string;
+  deadline: string;
+  status: 'Planned' | 'Preparation' | 'Scheduled' | 'Ready' | 'At Risk';
+  towerDomain: string;
+  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+}
+
+export const upcomingAudits: UpcomingAudit[] = [
+  { id: 'UA-001', auditName: 'Q4 Security Compliance Audit', auditType: 'Internal', assignedOwner: 'Daniel Mathew', plannedDate: '2026-10-01', deadline: '2026-12-31', status: 'Preparation', towerDomain: 'Security', priority: 'Critical' },
+  { id: 'UA-002', auditName: 'ISO 27001 Surveillance Audit', auditType: 'External', assignedOwner: 'Daniel Mathew', plannedDate: '2026-11-15', deadline: '2026-12-15', status: 'Planned', towerDomain: 'Security', priority: 'Critical' },
+  { id: 'UA-003', auditName: 'NCA ECC Annual Assessment', auditType: 'External', assignedOwner: 'Daniel Mathew', plannedDate: '2026-11-01', deadline: '2026-12-31', status: 'Preparation', towerDomain: 'Security', priority: 'High' },
+  { id: 'UA-004', auditName: 'ITSM Process Maturity Follow-Up', auditType: 'Internal', assignedOwner: 'Huda Al-Salem', plannedDate: '2026-09-15', deadline: '2026-10-15', status: 'Scheduled', towerDomain: 'Service Desk', priority: 'Medium' },
+  { id: 'UA-005', auditName: 'Cloud Security Posture Review', auditType: 'Internal', assignedOwner: 'Priya Nair', plannedDate: '2026-10-15', deadline: '2026-11-30', status: 'Planned', towerDomain: 'Cloud', priority: 'High' },
+  { id: 'UA-006', auditName: 'Infrastructure Hardening Audit', auditType: 'Internal', assignedOwner: 'Ahmed Al-Qahtani', plannedDate: '2026-09-20', deadline: '2026-10-20', status: 'Ready', towerDomain: 'Infrastructure', priority: 'High' },
+  { id: 'UA-007', auditName: 'Network Segmentation Review', auditType: 'External', assignedOwner: 'Mohammed Al-Dosari', plannedDate: '2026-10-01', deadline: '2026-11-30', status: 'Planned', towerDomain: 'Network', priority: 'Medium' },
+  { id: 'UA-008', auditName: 'Vendor SLA Compliance Audit', auditType: 'Internal', assignedOwner: 'Noura Al-Qahtani', plannedDate: '2026-09-25', deadline: '2026-10-31', status: 'At Risk', towerDomain: 'Service Desk', priority: 'High' },
+  { id: 'UA-009', auditName: 'Database Security Assessment', auditType: 'Internal', assignedOwner: 'Omar Al-Mutairi', plannedDate: '2026-10-10', deadline: '2026-11-15', status: 'Planned', towerDomain: 'Database', priority: 'Medium' },
+  { id: 'UA-010', auditName: 'Endpoint Compliance Follow-Up', auditType: 'Internal', assignedOwner: 'Layla Hassan', plannedDate: '2026-10-05', deadline: '2026-10-31', status: 'Preparation', towerDomain: 'Digital Workplace', priority: 'Medium' },
+];

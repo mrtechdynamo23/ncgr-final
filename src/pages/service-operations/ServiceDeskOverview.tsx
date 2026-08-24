@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDataStore } from '../../data/mockDataStore';
-import { ArrowRight, Users, Sparkles } from 'lucide-react';
+import {
+  ArrowRight, Users, Sparkles, Clock,
+  Download, ChevronRight
+} from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from './CommandCenterLandingPage';
 
 const ticketVolumeTrend = [
   { time: '06:00', calls: 14, selfService: 8 },
@@ -17,7 +22,6 @@ const ticketVolumeTrend = [
   { time: '18:00', calls: 20, selfService: 15 },
   { time: '20:00', calls: 12, selfService: 8 },
 ];
-
 
 const categoryDistribution = [
   { category: 'Account / Password', count: 95 },
@@ -31,39 +35,23 @@ const categoryDistribution = [
 const ServiceDeskOverview: React.FC = () => {
   const navigate = useNavigate();
   const { incidents, serviceRequests } = useDataStore();
+  const [dfrExpanded, setDfrExpanded] = useState(false);
 
   const openIncidents = incidents.filter(i => i.status === 'Open' || i.status === 'In Progress').length;
   const openRequests = serviceRequests.filter(r => r.status === 'Open' || r.status === 'In Progress').length;
+  const p1p2Count = incidents.filter(i => (i.priority === 'P1' || i.priority === 'P2') && (i.status === 'Open' || i.status === 'In Progress')).length;
 
   return (
     <div className="page-container" style={{ paddingBottom: 48 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <h1 style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--text, #101828)', margin: 0 }}>
-              Service Desk Overview
-            </h1>
-            <span
-              style={{
-                fontSize: '0.6875rem',
-                fontWeight: 700,
-                padding: '2px 8px',
-                borderRadius: 12,
-                background: 'rgba(7, 74, 118, 0.1)',
-                color: 'var(--ncgr-deep-blue, #074A76)',
-                border: '1px solid rgba(7, 74, 118, 0.25)',
-              }}
-            >
-              SERVICENOW LIVE FEED
-            </span>
-          </div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-            Real-time L1/L2 contact resolution, queue health, call telemetry, and SLA attainment metrics
-          </p>
-        </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Service Desk Overview"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={() => navigate('/command-center/incidents')}
             style={{
@@ -99,6 +87,140 @@ const ServiceDeskOverview: React.FC = () => {
             Service Requests
           </button>
         </div>
+
+      {/* ─── COMPACT DAILY FLASH REPORT (DFR) WIDGET ─────────── */}
+      {/* Relocated from Executive Dashboard to Service Desk Overview */}
+      <div
+        className="card"
+        style={{
+          padding: '16px 20px',
+          borderRadius: 12,
+          background: 'linear-gradient(135deg, rgba(7, 74, 118, 0.05) 0%, rgba(64, 144, 79, 0.05) 100%)',
+          border: '1px solid rgba(7, 74, 118, 0.2)',
+          borderLeft: '4px solid #074A76',
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: 'var(--ncgr-deep-blue, #074A76)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Clock size={20} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)' }}>
+                  Daily Flash Report (DFR) — 15 Aug 2026
+                </h3>
+                <span
+                  style={{
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    background: p1p2Count > 0 ? '#FFEBE6' : '#E3FCEF',
+                    color: p1p2Count > 0 ? '#DE350B' : '#22A06B',
+                  }}
+                >
+                  {p1p2Count > 0 ? `${p1p2Count} Active Major Events` : 'All Green'}
+                </span>
+              </div>
+              <p style={{ margin: '2px 0 0', fontSize: '0.78125rem', color: 'var(--text-secondary, #475467)' }}>
+                24-hour executive operational pulse: 274 total tickets • 84.6% FCR • 0 Unplanned Outages • 3 Standard RFCs Deployed
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => setDfrExpanded(!dfrExpanded)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 6,
+                background: 'var(--surface, #FFFFFF)',
+                border: '1px solid var(--border, #E4E7EC)',
+                color: 'var(--ncgr-deep-blue, #074A76)',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <span>{dfrExpanded ? 'Collapse Flash' : 'View Full Flash'}</span>
+              <ChevronRight size={14} style={{ transform: dfrExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+            <button
+              onClick={() => alert('DFR 15 Aug Report exported as PDF')}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 6,
+                background: 'var(--ncgr-deep-blue, #074A76)',
+                border: 'none',
+                color: '#FFFFFF',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              <Download size={14} />
+              <span>Export DFR</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Expanded 24-hour summary details */}
+        {dfrExpanded && (
+          <div
+            style={{
+              marginTop: 16,
+              paddingTop: 16,
+              borderTop: '1px solid rgba(7, 74, 118, 0.15)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            <div style={{ padding: 10, background: 'var(--card-bg, #FFFFFF)', borderRadius: 6, border: '1px solid var(--border, #E4E7EC)' }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Shift Handover Highlight</div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text, #101828)', marginTop: 2 }}>
+                Night shift handover clean. SAP batch payroll job completed successfully at 04:15.
+              </div>
+            </div>
+            <div style={{ padding: 10, background: 'var(--card-bg, #FFFFFF)', borderRadius: 6, border: '1px solid var(--border, #E4E7EC)' }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Critical Incidents (P1/P2)</div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: p1p2Count > 0 ? '#DE350B' : '#22A06B', marginTop: 2 }}>
+                {p1p2Count === 0 ? '0 open major incidents across all 9 towers.' : `${p1p2Count} major incident under active investigation.`}
+              </div>
+            </div>
+            <div style={{ padding: 10, background: 'var(--card-bg, #FFFFFF)', borderRadius: 6, border: '1px solid var(--border, #E4E7EC)' }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Change Advisory (CAB)</div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text, #101828)', marginTop: 2 }}>
+                RFC-2026-881 (Palo Alto Rule Update) deployed with zero packet loss or rollback.
+              </div>
+            </div>
+            <div style={{ padding: 10, background: 'var(--card-bg, #FFFFFF)', borderRadius: 6, border: '1px solid var(--border, #E4E7EC)' }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Backlog Delta</div>
+              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#40904F', marginTop: 2 }}>
+                -18 tickets net backlog reduction vs 7-day rolling average.
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ─── 8 SERVICE DESK KPI METRICS ─────────────────────── */}

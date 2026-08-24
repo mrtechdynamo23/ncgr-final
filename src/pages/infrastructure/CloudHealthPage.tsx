@@ -1,5 +1,7 @@
 import React from 'react';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { INFRASTRUCTURE_SIBLINGS } from './InfrastructureLandingPage';
 
 interface CloudResource {
   id: string;
@@ -131,15 +133,13 @@ const CloudHealthPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Cloud Platform Health & Subscriptions
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Google Cloud Platform (me-central2 Dammam) & Microsoft Azure cluster workloads, ExpressRoute, and monthly SAR expenditures
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Infrastructure Health"
+        modulePath="/infrastructure"
+        pageTitle="Cloud Health"
+        siblingPages={INFRASTRUCTURE_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

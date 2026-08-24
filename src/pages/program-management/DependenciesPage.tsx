@@ -1,6 +1,8 @@
 import React from 'react';
 import { dependencies, type DependencyRecord } from '../../data/programs';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { PROGRAM_MGMT_SIBLINGS } from './ProgramManagementLandingPage';
 
 const DependenciesPage: React.FC = () => {
   const highImpactCount = dependencies.filter(d => d.impact === 'High').length;
@@ -115,15 +117,13 @@ const DependenciesPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Cross-Program Dependencies
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Critical path mapping between upstream technology foundations and downstream application launches
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Program Management"
+        modulePath="/program-management"
+        pageTitle="Dependencies"
+        siblingPages={PROGRAM_MGMT_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

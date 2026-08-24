@@ -2,43 +2,49 @@ import React, { useState } from 'react';
 import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
-import type { MasterEmployee } from '../../data/master-employees';
-import { Eye } from 'lucide-react';
+import { getSaudizationStats, type MasterEmployee } from '../../data/master-employees';
+import { Eye, ShieldCheck, AlertTriangle } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { TEAM_OVERVIEW_SIBLINGS } from './TeamOverviewLandingPage';
 
 const ResourceRoster: React.FC = () => {
   const { employees } = useDataStore();
   const [selectedEmployee, setSelectedEmployee] = useState<MasterEmployee | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBucketFilter, setSelectedBucketFilter] = useState<string>('All');
+
+  const saudStats = getSaudizationStats();
 
   const handleRowClick = (employee: MasterEmployee) => {
     setSelectedEmployee(employee);
     setIsModalOpen(true);
   };
 
+  // Filter employees if domain card clicked
+  const filteredEmployees = selectedBucketFilter === 'All'
+    ? employees
+    : employees.filter(e => e.locationBucket === selectedBucketFilter);
+
+  // Column order specified in requirements:
+  // Position, Tower, Department, Name, Reporting Manager, Status, Shift, Type, Actions
   const columns: ColumnDef<MasterEmployee>[] = [
     {
-      header: 'Employee ID',
-      accessorKey: 'employeeId',
-      width: '120px',
-      cell: (row) => (
-        <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
-          {row.employeeId}
-        </span>
-      ),
-    },
-    {
-      header: 'Full Name',
-      accessorKey: 'name',
+      header: 'Position',
+      accessorKey: 'position',
+      width: '150px',
       cell: (row) => (
         <div>
-          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.name}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.email}</div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.position}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--ncgr-deep-blue, #074A76)', fontFamily: 'monospace' }}>
+            {row.employeeId}
+          </div>
         </div>
       ),
     },
     {
       header: 'Tower',
       accessorKey: 'tower',
+      width: '130px',
       cell: (row) => (
         <span
           style={{
@@ -48,6 +54,7 @@ const ResourceRoster: React.FC = () => {
             fontWeight: 600,
             fontSize: '0.75rem',
             border: '1px solid var(--border, #E4E7EC)',
+            color: 'var(--text, #101828)',
           }}
         >
           {row.tower}
@@ -57,24 +64,35 @@ const ResourceRoster: React.FC = () => {
     {
       header: 'Department',
       accessorKey: 'department',
+      cell: (row) => (
+        <span style={{ fontSize: '0.8125rem', color: 'var(--text-secondary, #475467)' }}>
+          {row.department}
+        </span>
+      ),
     },
     {
-      header: 'Position / Role',
-      accessorKey: 'position',
+      header: 'Name',
+      accessorKey: 'name',
       cell: (row) => (
         <div>
-          <div style={{ fontWeight: 600 }}>{row.position}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)' }}>{row.role}</div>
+          <div style={{ fontWeight: 700, color: 'var(--text, #101828)' }}>{row.name}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.email}</div>
         </div>
       ),
     },
     {
       header: 'Reporting Manager',
       accessorKey: 'manager',
+      cell: (row) => (
+        <span style={{ fontSize: '0.8125rem', color: 'var(--text, #101828)', fontWeight: 500 }}>
+          {row.manager}
+        </span>
+      ),
     },
     {
       header: 'Status',
       accessorKey: 'status',
+      width: '100px',
       cell: (row) => {
         const bg = row.status === 'Active' ? '#E3FCEF' : row.status === 'On Leave' ? '#FFF7E6' : row.status === 'Training' ? '#E6F4FC' : '#F4F5F7';
         const color = row.status === 'Active' ? '#22A06B' : row.status === 'On Leave' ? '#E97F0A' : row.status === 'Training' ? '#4AA6DC' : '#8993A4';
@@ -106,9 +124,19 @@ const ResourceRoster: React.FC = () => {
     {
       header: 'Type',
       accessorKey: 'expatLocal',
+      width: '90px',
       cell: (row) => (
-        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: row.expatLocal === 'Local' ? '#40904F' : '#074A76' }}>
-          {row.expatLocal}
+        <span
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            color: row.expatLocal === 'Local' ? '#40904F' : '#074A76',
+            padding: '2px 6px',
+            borderRadius: 4,
+            background: row.expatLocal === 'Local' ? 'rgba(64, 144, 79, 0.1)' : 'rgba(7, 74, 118, 0.08)',
+          }}
+        >
+          {row.expatLocal === 'Local' ? 'Saudi' : 'Expat'}
         </span>
       ),
     },
@@ -145,16 +173,18 @@ const ResourceRoster: React.FC = () => {
   const uniqueTowers = Array.from(new Set(employees.map(e => e.tower))).map(t => ({ label: t, value: t }));
   const uniqueDepartments = Array.from(new Set(employees.map(e => e.department))).map(d => ({ label: d, value: d }));
   const uniqueStatuses = Array.from(new Set(employees.map(e => e.status))).map(s => ({ label: s, value: s }));
+  const uniqueBuckets = Array.from(new Set(employees.map(e => e.locationBucket))).map(b => ({ label: b, value: b }));
 
   const filters: FilterDef<MasterEmployee>[] = [
+    { key: 'locationBucket', label: 'Saudization Domain', options: uniqueBuckets },
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     { key: 'department', label: 'Departments', options: uniqueDepartments },
     { key: 'status', label: 'Statuses', options: uniqueStatuses },
     {
       key: 'expatLocal',
-      label: 'Local / Expat',
+      label: 'Nationality',
       options: [
-        { label: 'Local (Saudi)', value: 'Local' },
+        { label: 'Saudi National', value: 'Local' },
         { label: 'Expat', value: 'Expat' },
       ],
     },
@@ -162,28 +192,113 @@ const ResourceRoster: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Team Overview"
+        modulePath="/team-overview"
+        pageTitle="Resource Data"
+        siblingPages={TEAM_OVERVIEW_SIBLINGS}
+      />
+
+      {/* ─── SAUDIZATION DOMAIN SUMMARY STRIP (Section 4 Authoritative Figures) ─── */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Resource Data
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Central master employee roster of 355+ operational engineers, team leads, architects, and support specialists
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text, #101828)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Approved Saudization Domain Status
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginLeft: 8 }}>
+              (Authoritative Governance Baseline)
+            </span>
+          </div>
+          {selectedBucketFilter !== 'All' && (
+            <button
+              onClick={() => setSelectedBucketFilter('All')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--ncgr-deep-blue, #074A76)',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              Clear Domain Filter ({selectedBucketFilter}) ✕
+            </button>
+          )}
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 10,
+          }}
+        >
+          {saudStats.domains.map((dom) => {
+            const isSelected = selectedBucketFilter === dom.locationBucket;
+            const isOk = dom.status === 'OK';
+            return (
+              <div
+                key={dom.locationBucket}
+                onClick={() => setSelectedBucketFilter(isSelected ? 'All' : dom.locationBucket)}
+                className="card"
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  background: isSelected ? 'rgba(7, 74, 118, 0.08)' : 'var(--card-bg, #FFFFFF)',
+                  border: isSelected ? '2px solid #074A76' : '1px solid var(--border, #E4E7EC)',
+                  borderLeft: `4px solid ${isOk ? '#22A06B' : '#DE350B'}`,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text, #101828)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {dom.locationBucket}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, color: isOk ? '#22A06B' : '#DE350B' }}>
+                    {dom.actualPct}%
+                  </div>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)' }}>
+                    Target: {dom.targetPct}%
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, fontSize: '0.6875rem' }}>
+                  <span style={{ color: 'var(--text-secondary, #475467)' }}>
+                    {dom.saudiCount}/{dom.totalCount} Staff
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 700,
+                      color: isOk ? '#22A06B' : '#DE350B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                    }}
+                  >
+                    {isOk ? <ShieldCheck size={11} /> : <AlertTriangle size={11} />}
+                    {dom.status}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main DataTable */}
       <DataTable
-        data={employees}
+        data={filteredEmployees}
         columns={columns}
         filters={filters}
-        searchPlaceholder="Search by name, ID, email, role, or position..."
-        searchKeys={['name', 'employeeId', 'email', 'role', 'position', 'manager']}
+        searchPlaceholder="Search by position, name, tower, ID, or manager..."
+        searchKeys={['position', 'name', 'tower', 'department', 'employeeId', 'manager', 'role']}
         pageSize={15}
         onRowClick={handleRowClick}
         title="Master Operational Workforce"
-        subtitle="Click any row to open the complete employee profile and assignment history"
-        exportFilename="ncgr_resource_data"
+        subtitle={`Showing ${filteredEmployees.length} employee records • Click any row for profile, privacy-masked phone & role history`}
+        exportFilename="ncgr_resource_roster"
       />
 
       {/* Employee Detail Modal */}

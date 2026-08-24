@@ -4,6 +4,8 @@ import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
 import type { MasterEmployee } from '../../data/master-employees';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { PROGRAM_MGMT_SIBLINGS } from './ProgramManagementLandingPage';
 
 const MilestonesPage: React.FC = () => {
   const { employees } = useDataStore();
@@ -152,15 +154,13 @@ const MilestonesPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Program Milestones & Delivery Roadmap
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Tracking 15 major program milestones, schedule variance, deliverable completion, and lead accountability
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Program Management"
+        modulePath="/program-management"
+        pageTitle="Milestones & Delivery Roadmap"
+        siblingPages={PROGRAM_MGMT_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

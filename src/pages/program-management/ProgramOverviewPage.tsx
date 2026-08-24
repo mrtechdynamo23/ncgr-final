@@ -5,6 +5,8 @@ import { ArrowRight } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid
 } from 'recharts';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { PROGRAM_MGMT_SIBLINGS } from './ProgramManagementLandingPage';
 
 const ProgramOverviewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -16,21 +18,19 @@ const ProgramOverviewPage: React.FC = () => {
 
   const programProgressData = programs.map(p => ({
     name: p.name.length > 20 ? p.name.slice(0, 18) + '...' : p.name,
+    fullName: p.name,
     progress: p.progressPct,
   }));
 
   return (
     <div className="page-container" style={{ paddingBottom: 48 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: '1.625rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-            Program Management & Roadmap
-          </h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-            NCGR ITMS multi-year transformation programs, milestone timelines, cross-tower dependencies, and resource mobilization
-          </p>
-        </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Program Management"
+        modulePath="/program-management"
+        pageTitle="Program Overview & Roadmap"
+        siblingPages={PROGRAM_MGMT_SIBLINGS}
+      />
 
         <div style={{ display: 'flex', gap: 10 }}>
           <button
@@ -68,7 +68,6 @@ const ProgramOverviewPage: React.FC = () => {
             Resource Mobilization
           </button>
         </div>
-      </div>
 
       {/* KPI Cards Strip */}
       <div
@@ -128,7 +127,11 @@ const ProgramOverviewPage: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border, #E4E7EC)" horizontal={false} />
               <XAxis type="number" domain={[0, 100]} unit="%" tick={{ fontSize: 11, fill: 'var(--text-secondary, #475467)' }} />
               <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: 'var(--text-secondary, #475467)' }} width={160} />
-              <Tooltip contentStyle={{ background: 'var(--surface-raised, #FFFFFF)', borderRadius: 8, borderColor: 'var(--border, #E4E7EC)', fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ background: 'var(--surface-raised, #FFFFFF)', borderRadius: 8, borderColor: 'var(--border, #E4E7EC)', fontSize: 12 }}
+                labelFormatter={(_label, payload) => (payload && payload[0]?.payload?.fullName) ? payload[0].payload.fullName : _label}
+                formatter={(val: any) => [`${val}%`, 'Completion']}
+              />
               <Bar dataKey="progress" name="Completion %" fill="#074A76" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>

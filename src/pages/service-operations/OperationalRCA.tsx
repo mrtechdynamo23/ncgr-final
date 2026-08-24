@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from './CommandCenterLandingPage';
 
 interface RCARecord {
   id: string;
@@ -31,9 +33,12 @@ const rcaList: RCARecord[] = [
 
 const OperationalRCA: React.FC = () => {
   const [selectedRCA, setSelectedRCA] = useState<RCARecord | null>(null);
+  const [filteredRCAs, setFilteredRCAs] = useState<RCARecord[]>(rcaList);
 
-  const approvedCount = rcaList.filter(r => r.status === 'Approved' || r.status === 'Closed').length;
-  const underReviewCount = rcaList.filter(r => r.status === 'Under Review' || r.status === 'Draft').length;
+  const totalRCAs = filteredRCAs.length;
+  const approvedCount = filteredRCAs.filter(r => r.status === 'Approved' || r.status === 'Closed').length;
+  const underReviewCount = filteredRCAs.filter(r => r.status === 'Under Review' || r.status === 'Draft').length;
+  const closedCount = filteredRCAs.filter(r => r.status === 'Closed').length;
 
   const columns: ColumnDef<RCARecord>[] = [
     {
@@ -156,15 +161,13 @@ const OperationalRCA: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Operational RCA Repository
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          P1/P2 Major Incident Root Cause Analysis, Corrective & Preventive Action (CAPA) tracking, and formal sign-offs
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Operational RCA"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div
@@ -177,12 +180,14 @@ const OperationalRCA: React.FC = () => {
       >
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total RCA Reports</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{rcaList.length}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Audited investigations</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{totalRCAs}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            {totalRCAs === rcaList.length ? 'Audited investigations' : `Filtered (${totalRCAs} of ${rcaList.length})`}
+          </div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Approved & Signed-off</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#22A06B', textTransform: 'uppercase' }}>Approved & Active</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{approvedCount}</div>
           <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>CAPA verified applied</div>
         </div>
@@ -190,7 +195,13 @@ const OperationalRCA: React.FC = () => {
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#E97F0A', textTransform: 'uppercase' }}>Under Review</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#E97F0A', marginTop: 4 }}>{underReviewCount}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>CAB verification pending</div>
+          <div style={{ fontSize: '0.75rem', color: '#E97F0A', marginTop: 2, fontWeight: 600 }}>Leadership sign-off</div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#074A76', textTransform: 'uppercase' }}>Closed Investigations</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#074A76', marginTop: 4 }}>{closedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Fully resolved</div>
         </div>
       </div>
 
@@ -199,6 +210,7 @@ const OperationalRCA: React.FC = () => {
         data={rcaList}
         columns={columns}
         filters={filters}
+        onFilteredDataChange={setFilteredRCAs}
         searchPlaceholder="Search RCA by ID, incident, root cause, owner..."
         searchKeys={['id', 'incidentRef', 'service', 'rootCause', 'technicalCause', 'owner', 'tower']}
         pageSize={10}

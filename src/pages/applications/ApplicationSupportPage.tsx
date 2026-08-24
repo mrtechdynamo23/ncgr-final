@@ -4,6 +4,8 @@ import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
 import type { MasterEmployee } from '../../data/master-employees';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { APPLICATION_SERVICES_SIBLINGS } from './ApplicationServicesLandingPage';
 
 const ApplicationSupportPage: React.FC = () => {
   const { employees } = useDataStore();
@@ -137,15 +139,13 @@ const ApplicationSupportPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Application Support Coverage & Ownership
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          L1/L2/L3 support teams, 24x7 shift coverage windows, IT owner assignments, and business stakeholder accountability
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Application Services"
+        modulePath="/applications"
+        pageTitle="Application Support Coverage"
+        siblingPages={APPLICATION_SERVICES_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

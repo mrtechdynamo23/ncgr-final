@@ -4,6 +4,8 @@ import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import EmployeeDetailModal from '../../components/common/EmployeeDetailModal';
 import type { MasterEmployee } from '../../data/master-employees';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { PROGRAM_MGMT_SIBLINGS } from './ProgramManagementLandingPage';
 
 const ResourceMobilizationPage: React.FC = () => {
   const { employees } = useDataStore();
@@ -155,15 +157,13 @@ const ResourceMobilizationPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Resource Mobilization & KT Governance
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Tracking 110 dedicated engineering resources across 9 operational towers, assignment histories, and KT certifications
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Program Management"
+        modulePath="/program-management"
+        pageTitle="Resource Mobilisation"
+        siblingPages={PROGRAM_MGMT_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

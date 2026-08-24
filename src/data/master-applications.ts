@@ -100,6 +100,16 @@ export interface AppChangeRecord {
   releaseVersion: string;
   owner: string;
   servicenowRef: string;
+  /** Tower the change applies to (derived from linked application) */
+  tower: string;
+  /** Person who requested the change */
+  requestor: string;
+  /** Priority classification */
+  priority: 'P1' | 'P2' | 'P3' | 'P4';
+  /** Approval workflow status */
+  approvalStatus: 'Approved' | 'Pending' | 'Rejected' | 'CAB Review';
+  /** Backout plan summary */
+  backoutPlan: string;
 }
 
 export interface AppDependencyRecord {
@@ -913,6 +923,11 @@ export const appChangesList: AppChangeRecord[] = [
     releaseVersion: 'v4.3.0',
     owner: 'Sara Al-Otaibi',
     servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004281',
+    tower: 'Applications',
+    requestor: 'Sara Al-Otaibi',
+    priority: 'P3',
+    approvalStatus: 'CAB Review',
+    backoutPlan: 'Rollback to v4.2.1 deployment package; restore previous OAuth config',
   },
   {
     changeNumber: 'CHG004275',
@@ -926,6 +941,11 @@ export const appChangesList: AppChangeRecord[] = [
     releaseVersion: 'v5.9.0',
     owner: 'Sara Al-Otaibi',
     servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004275',
+    tower: 'Applications',
+    requestor: 'Arjun Menon',
+    priority: 'P2',
+    approvalStatus: 'Approved',
+    backoutPlan: 'Revert API Gateway config to v5.8.x; restore connection pool settings',
   },
   {
     changeNumber: 'CHG004269',
@@ -939,6 +959,11 @@ export const appChangesList: AppChangeRecord[] = [
     releaseVersion: 'v2024.1.1',
     owner: 'Omar Al-Mutairi',
     servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004269',
+    tower: 'Database',
+    requestor: 'Omar Al-Mutairi',
+    priority: 'P3',
+    approvalStatus: 'CAB Review',
+    backoutPlan: 'Restore previous SQL indexes; uninstall SP3 CU via WSUS rollback',
   },
   {
     changeNumber: 'CHG004263',
@@ -952,6 +977,11 @@ export const appChangesList: AppChangeRecord[] = [
     releaseVersion: 'v2.9.6-hotfix',
     owner: 'Arjun Menon',
     servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004263',
+    tower: 'Applications',
+    requestor: 'Faisal Al-Harbi',
+    priority: 'P1',
+    approvalStatus: 'Approved',
+    backoutPlan: 'Restart WebLogic with previous JVM args; rollback hotfix JAR',
   },
   {
     changeNumber: 'CHG004251',
@@ -965,6 +995,101 @@ export const appChangesList: AppChangeRecord[] = [
     releaseVersion: 'v3.5.0',
     owner: 'Sara Al-Otaibi',
     servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004251',
+    tower: 'Applications',
+    requestor: 'Sara Al-Otaibi',
+    priority: 'P3',
+    approvalStatus: 'Pending',
+    backoutPlan: 'Revert to v3.4.x release branch; restore SAML IdP config',
+  },
+  {
+    changeNumber: 'CHG004245',
+    appId: 'APP-SMP-002',
+    appName: 'Service Management Platform',
+    changeType: 'Normal',
+    description: 'ServiceNow Vancouver Patch 5 deployment with CMDB enhancements',
+    scheduledDate: '2026-08-23 01:00',
+    risk: 'High',
+    status: 'CAB Approved',
+    releaseVersion: 'Vancouver P5',
+    owner: 'Faisal Al-Harbi',
+    servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004245',
+    tower: 'Service Desk',
+    requestor: 'Huda Al-Salem',
+    priority: 'P2',
+    approvalStatus: 'Approved',
+    backoutPlan: 'Restore ServiceNow instance from pre-patch snapshot',
+  },
+  {
+    changeNumber: 'CHG004238',
+    appId: 'APP-ESP-001',
+    appName: 'Employee Services Portal',
+    changeType: 'Standard',
+    description: 'SSL certificate renewal for production endpoints',
+    scheduledDate: '2026-08-14 22:00',
+    risk: 'Low',
+    status: 'Completed',
+    releaseVersion: 'N/A',
+    owner: 'Daniel Mathew',
+    servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004238',
+    tower: 'Security',
+    requestor: 'Daniel Mathew',
+    priority: 'P4',
+    approvalStatus: 'Approved',
+    backoutPlan: 'Restore previous certificate from AppViewX vault',
+  },
+  {
+    changeNumber: 'CHG004232',
+    appId: 'APP-FOP-003',
+    appName: 'Finance Operations Portal',
+    changeType: 'Normal',
+    description: 'Network firewall rule update for new payment gateway integration',
+    scheduledDate: '2026-08-25 02:00',
+    risk: 'Medium',
+    status: 'Planned',
+    releaseVersion: 'N/A',
+    owner: 'Mohammed Al-Dosari',
+    servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004232',
+    tower: 'Network',
+    requestor: 'Omar Al-Mutairi',
+    priority: 'P3',
+    approvalStatus: 'CAB Review',
+    backoutPlan: 'Remove newly added firewall rules; restore previous ACL',
+  },
+  {
+    changeNumber: 'CHG004226',
+    appId: 'APP-PRC-004',
+    appName: 'Procurement Management',
+    changeType: 'Normal',
+    description: 'VMware ESXi host memory upgrade for application cluster',
+    scheduledDate: '2026-08-27 00:00',
+    risk: 'Medium',
+    status: 'Scheduled',
+    releaseVersion: 'N/A',
+    owner: 'Ahmed Al-Qahtani',
+    servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004226',
+    tower: 'Infrastructure',
+    requestor: 'Rakesh Kumar',
+    priority: 'P3',
+    approvalStatus: 'Pending',
+    backoutPlan: 'Revert memory allocation; restore VM snapshot',
+  },
+  {
+    changeNumber: 'CHG004220',
+    appId: 'APP-SMP-002',
+    appName: 'Service Management Platform',
+    changeType: 'Emergency',
+    description: 'Hotfix for ServiceNow knowledge article search indexing failure',
+    scheduledDate: '2026-08-11 08:00',
+    risk: 'Medium',
+    status: 'Completed',
+    releaseVersion: 'Hotfix-KB-001',
+    owner: 'Arjun Menon',
+    servicenowRef: 'https://demo.service-now.com/nav_to.do?uri=change_request.do?sys_id=CHG004220',
+    tower: 'Applications',
+    requestor: 'Aisha Rahman',
+    priority: 'P2',
+    approvalStatus: 'Approved',
+    backoutPlan: 'Revert search index configuration to previous state',
   },
 ];
 

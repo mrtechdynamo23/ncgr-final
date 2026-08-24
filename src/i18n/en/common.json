@@ -28,7 +28,7 @@
     "finops": "FINOPS",
     "reporting": "REPORTING",
     "serviceAssurance": "SERVICE ASSURANCE",
-    "executiveDashboard": "Executive Dashboard",
+    "executiveDashboard": "Executive Control Towers",
     "teamOverview": "Team Overview",
     "resourceData": "Resource Data",
     "teamStructure": "Team Structure",
@@ -80,10 +80,12 @@
     "milestones": "Milestones (15)",
     "dependencies": "Dependencies",
     "issuesActions": "Issues & Actions",
-    "resourceMobilisation": "Resource Mobilisation",
     "digitalTransformationAI": "Digital Transformation & AI",
-    "auditCompliance": "Audit & Compliance (21)",
-    "slaAssurance": "SLA Assurance"
+    "auditCompliance": "Audit & Compliance",
+    "slaAssurance": "SLA Management",
+    "saudizationTracker": "Saudization Tracker",
+    "learningCurriculum": "Learning & Certification Curriculum",
+    "repos": "Repos"
   },
   "common": {
     "search": "Search...",
@@ -178,5 +180,15 @@
     "trendStable": "Stable",
     "incidentSummary": "Critical Incident Summary",
     "techHealthOverview": "Technology Health Overview"
+  },
+  "landing": {
+    "heroEyebrow": "National Center for Government Resources • Executive Operating Environment",
+    "heroHeadlinePart1": "Unified IT Management,",
+    "heroHeadlinePart2": "One Executive View.",
+    "heroSubtext": "An integrated executive environment for IT operations, service assurance, governance, workforce visibility, compliance and transformation.",
+    "enterControlTower": "Enter the Executive Control Tower",
+    "explorePlatform": "Explore the Platform",
+    "secureSession": "Secure Executive Session",
+    "portalTitle": "Unified IT Management Portal"
   }
 }

@@ -165,7 +165,7 @@ export const PendingApprovalPage: React.FC<PendingApprovalPageProps> = ({
             gap: 8,
           }}
         >
-          <span>Return to Executive Dashboard</span>
+          <span>Return to Executive Control Towers</span>
           <ArrowRight size={16} />
         </button>
 

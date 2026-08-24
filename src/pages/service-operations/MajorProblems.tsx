@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import { X } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from './CommandCenterLandingPage';
 
 interface ProblemRecord {
   id: string;
@@ -30,10 +32,12 @@ const problemsList: ProblemRecord[] = [
 
 const MajorProblems: React.FC = () => {
   const [selectedProblem, setSelectedProblem] = useState<ProblemRecord | null>(null);
+  const [filteredProblems, setFilteredProblems] = useState<ProblemRecord[]>(problemsList);
 
-  const openProblems = problemsList.filter(p => p.status !== 'Resolved');
-  const resolvedProblems = problemsList.filter(p => p.status === 'Resolved');
-  const rcaCompleteCount = problemsList.filter(p => p.status === 'RCA Complete').length;
+  const totalProblems = filteredProblems.length;
+  const resolvedProblems = filteredProblems.filter(p => p.status === 'Resolved');
+  const rcaCompleteCount = filteredProblems.filter(p => p.status === 'RCA Complete').length;
+  const underInvestigationCount = filteredProblems.filter(p => p.status === 'Under Investigation').length;
 
   const columns: ColumnDef<ProblemRecord>[] = [
     {
@@ -109,7 +113,7 @@ const MajorProblems: React.FC = () => {
       cell: (row) => (
         <div>
           <div style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{row.targetClosure}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>Age: {row.aging}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)' }}>{row.aging}</div>
         </div>
       ),
     },
@@ -117,10 +121,11 @@ const MajorProblems: React.FC = () => {
       header: 'Status',
       accessorKey: 'status',
       cell: (row) => {
-        const bg = row.status === 'Resolved' ? '#E3FCEF' : row.status === 'RCA Complete' ? '#E6F4FC' : '#FFF7E6';
-        const color = row.status === 'Resolved' ? '#22A06B' : row.status === 'RCA Complete' ? '#074A76' : '#E97F0A';
+        const bg = row.status === 'Resolved' ? '#E3FCEF' : row.status === 'RCA Complete' ? '#E6F4FC' : row.status === 'Known Error' ? '#FFF7E6' : '#FFEBE6';
+        const color = row.status === 'Resolved' ? '#22A06B' : row.status === 'RCA Complete' ? '#074A76' : row.status === 'Known Error' ? '#E97F0A' : '#DE350B';
         return (
           <span
+            className="status-badge"
             style={{
               padding: '3px 10px',
               borderRadius: 12,
@@ -167,6 +172,15 @@ const MajorProblems: React.FC = () => {
   const filters: FilterDef<ProblemRecord>[] = [
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     {
+      key: 'priority',
+      label: 'Priorities',
+      options: [
+        { label: 'High', value: 'High' },
+        { label: 'Medium', value: 'Medium' },
+        { label: 'Low', value: 'Low' },
+      ],
+    },
+    {
       key: 'status',
       label: 'Statuses',
       options: [
@@ -180,17 +194,13 @@ const MajorProblems: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Major Problem Management
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Root Cause Analysis (RCA), Known Error Database (KEDB), and elimination of recurrent operational incidents
-        </p>
-      </div>
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Problems"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
-      {/* KPI Cards Strip */}
       <div
         style={{
           display: 'grid',
@@ -200,9 +210,17 @@ const MajorProblems: React.FC = () => {
         }}
       >
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Active Problem Investigations</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{openProblems.length}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Under engineering analysis</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Problems</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{totalProblems}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            {totalProblems === problemsList.length ? 'Master problem register' : `Filtered (${totalProblems} of ${problemsList.length})`}
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#DE350B', textTransform: 'uppercase' }}>Active Investigations</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DE350B', marginTop: 4 }}>{underInvestigationCount}</div>
+          <div style={{ fontSize: '0.75rem', color: '#DE350B', marginTop: 2, fontWeight: 600 }}>Under engineering analysis</div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
@@ -218,18 +236,18 @@ const MajorProblems: React.FC = () => {
         </div>
       </div>
 
-      {/* Main DataTable */}
       <DataTable
         data={problemsList}
         columns={columns}
         filters={filters}
+        onFilteredDataChange={setFilteredProblems}
         searchPlaceholder="Search problems by statement, service, root cause..."
         searchKeys={['id', 'problemStatement', 'service', 'rootCause', 'owner', 'relatedIncidents']}
         pageSize={10}
         onRowClick={(row) => setSelectedProblem(row)}
-        title="Major Problem Records"
+        title="Problem Records"
         subtitle="Click any problem record to open technical RCA and corrective actions"
-        exportFilename="ncgr_major_problems"
+        exportFilename="ncgr_problems"
       />
 
       {/* Problem Detail Modal */}

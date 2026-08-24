@@ -2,16 +2,26 @@ import React, { useState } from 'react';
 import { useDataStore } from '../../data/mockDataStore';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
 import type { Incident } from '../../data/incidents';
-import { X } from 'lucide-react';
+import { X, CheckCircle2, Cpu } from 'lucide-react';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { COMMAND_CENTER_SIBLINGS } from './CommandCenterLandingPage';
 
 const Incidents: React.FC = () => {
   const { incidents } = useDataStore();
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
+  const [filteredIncidents, setFilteredIncidents] = useState<Incident[]>(incidents);
 
-  const p1Count = incidents.filter(i => i.priority === 'P1').length;
-  const p2Count = incidents.filter(i => i.priority === 'P2').length;
-  const openCount = incidents.filter(i => i.status === 'Open' || i.status === 'In Progress').length;
-  const resolvedCount = incidents.filter(i => i.status === 'Resolved' || i.status === 'Closed').length;
+  const totalCount = filteredIncidents.length;
+  const p1Count = filteredIncidents.filter(i => i.priority === 'P1').length;
+  const p2Count = filteredIncidents.filter(i => i.priority === 'P2').length;
+  const openCount = filteredIncidents.filter(i => i.status === 'Open' || i.status === 'In Progress').length;
+  const resolvedCount = filteredIncidents.filter(i => i.status === 'Resolved' || i.status === 'Closed').length;
+  const aiResolvedCount = filteredIncidents.filter(i => i.resolutionBy === 'AI Assistant').length;
+
+  const handleOpenAiBrief = (incident: Incident, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedIncident(incident);
+  };
 
   const columns: ColumnDef<Incident>[] = [
     {
@@ -86,6 +96,63 @@ const Incidents: React.FC = () => {
       ),
     },
     {
+      header: 'Resolution By',
+      accessorKey: 'resolutionBy',
+      width: '130px',
+      cell: (row) => {
+        const isAi = row.resolutionBy === 'AI Assistant';
+        if (isAi) {
+          return (
+            <button
+              onClick={(e) => handleOpenAiBrief(row, e)}
+              title="Click to view AI Resolution Brief"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '3px 10px',
+                borderRadius: 6,
+                background: 'rgba(7, 74, 118, 0.08)',
+                color: 'var(--ncgr-deep-blue, #074A76)',
+                border: '1px solid rgba(7, 74, 118, 0.22)',
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(7, 74, 118, 0.16)';
+                e.currentTarget.style.borderColor = 'var(--ncgr-deep-blue, #074A76)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(7, 74, 118, 0.08)';
+                e.currentTarget.style.borderColor = 'rgba(7, 74, 118, 0.22)';
+              }}
+            >
+              AI Assistant
+            </button>
+          );
+        }
+
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '3px 10px',
+              borderRadius: 6,
+              background: 'var(--bg-secondary, #F1F5F9)',
+              color: 'var(--text-secondary, #475569)',
+              border: '1px solid var(--border, #CBD5E1)',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+            }}
+          >
+            Human
+          </span>
+        );
+      },
+    },
+    {
       header: 'Duration',
       accessorKey: 'elapsedTime',
       cell: (row) => (
@@ -124,7 +191,7 @@ const Incidents: React.FC = () => {
     },
   ];
 
-  const uniqueTowers = Array.from(new Set(incidents.map(e => e.tower))).map(t => ({ label: t, value: t }));
+  const uniqueTowers = Array.from(new Set(incidents.map((e: Incident) => e.tower))).filter(Boolean).map(t => ({ label: String(t), value: String(t) }));
   const uniquePriorities = [
     { label: 'P1 - Critical', value: 'P1' },
     { label: 'P2 - High', value: 'P2' },
@@ -137,24 +204,27 @@ const Incidents: React.FC = () => {
     { label: 'Resolved', value: 'Resolved' },
     { label: 'Closed', value: 'Closed' },
   ];
+  const uniqueResolutions = [
+    { label: 'Human', value: 'Human' },
+    { label: 'AI Assistant', value: 'AI Assistant' },
+  ];
 
   const filters: FilterDef<Incident>[] = [
     { key: 'priority', label: 'Priorities', options: uniquePriorities },
+    { key: 'resolutionBy', label: 'Resolution By', options: uniqueResolutions },
     { key: 'tower', label: 'Towers', options: uniqueTowers },
     { key: 'status', label: 'Statuses', options: uniqueStatuses },
   ];
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Incidents Management
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Complete operational incident repository (P1 to P4) with real-time assignment, duration tracking, and resolution state
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Command Center"
+        modulePath="/command-center"
+        pageTitle="Incidents"
+        siblingPages={COMMAND_CENTER_SIBLINGS}
+      />
 
       {/* KPI Overview */}
       <div
@@ -167,8 +237,10 @@ const Incidents: React.FC = () => {
       >
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
           <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #475467)', textTransform: 'uppercase' }}>Total Incidents</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{incidents.length}</div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>ServiceNow Repository</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{totalCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>
+            {totalCount === incidents.length ? 'ServiceNow Repository' : `Filtered (${totalCount} of ${incidents.length})`}
+          </div>
         </div>
 
         <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
@@ -188,6 +260,12 @@ const Incidents: React.FC = () => {
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22A06B', marginTop: 4 }}>{resolvedCount}</div>
           <div style={{ fontSize: '0.75rem', color: '#22A06B', marginTop: 2, fontWeight: 600 }}>Within target SLA</div>
         </div>
+
+        <div className="card" style={{ padding: 16, borderRadius: 10, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--ncgr-deep-blue, #074A76)', textTransform: 'uppercase' }}>Resolution By AI</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 4 }}>{aiResolvedCount}</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', marginTop: 2 }}>Sovereign AI Assisted</div>
+        </div>
       </div>
 
       {/* Main DataTable */}
@@ -195,8 +273,9 @@ const Incidents: React.FC = () => {
         data={incidents}
         columns={columns}
         filters={filters}
+        onFilteredDataChange={setFilteredIncidents}
         searchPlaceholder="Search by ID, title, description, engineer, CI..."
-        searchKeys={['id', 'title', 'description', 'assignedEngineer', 'owner', 'relatedCI', 'service', 'tower']}
+        searchKeys={['id', 'title', 'description', 'assignedEngineer', 'owner', 'relatedCI', 'service', 'tower', 'resolutionBy']}
         pageSize={15}
         onRowClick={(row) => setSelectedIncident(row)}
         title="Master Operational Incidents Log"
@@ -223,8 +302,8 @@ const Incidents: React.FC = () => {
               top: 0,
               right: 0,
               bottom: 0,
-              width: 500,
-              maxWidth: '90vw',
+              width: 560,
+              maxWidth: '92vw',
               background: 'var(--surface-raised, #FFFFFF)',
               boxShadow: '-8px 0 30px rgba(0, 0, 0, 0.15)',
               zIndex: 1001,
@@ -234,6 +313,7 @@ const Incidents: React.FC = () => {
               overflowY: 'auto',
             }}
           >
+            {/* Drawer Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span
@@ -242,8 +322,8 @@ const Incidents: React.FC = () => {
                     borderRadius: 4,
                     fontSize: '0.75rem',
                     fontWeight: 800,
-                    background: selectedIncident.priority === 'P1' ? '#FFEBE6' : '#FFF7E6',
-                    color: selectedIncident.priority === 'P1' ? '#DE350B' : '#E97F0A',
+                    background: selectedIncident.priority === 'P1' ? '#FFEBE6' : selectedIncident.priority === 'P2' ? '#FFF7E6' : '#E6F4FC',
+                    color: selectedIncident.priority === 'P1' ? '#DE350B' : selectedIncident.priority === 'P2' ? '#E97F0A' : '#074A76',
                   }}
                 >
                   {selectedIncident.priority}
@@ -251,10 +331,24 @@ const Incidents: React.FC = () => {
                 <span style={{ fontSize: '0.8125rem', fontFamily: 'monospace', fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)' }}>
                   {selectedIncident.id}
                 </span>
+                <span
+                  style={{
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    background: selectedIncident.resolutionBy === 'AI Assistant' ? 'rgba(7, 74, 118, 0.1)' : 'var(--bg-secondary, #F1F5F9)',
+                    color: selectedIncident.resolutionBy === 'AI Assistant' ? 'var(--ncgr-deep-blue, #074A76)' : 'var(--text-secondary, #475569)',
+                    border: `1px solid ${selectedIncident.resolutionBy === 'AI Assistant' ? 'rgba(7, 74, 118, 0.25)' : 'var(--border, #CBD5E1)'}`,
+                  }}
+                >
+                  Resolution: {selectedIncident.resolutionBy}
+                </span>
               </div>
               <button
                 onClick={() => setSelectedIncident(null)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                aria-label="Close incident drawer"
               >
                 <X size={20} color="var(--text-tertiary, #98A2B3)" />
               </button>
@@ -264,11 +358,140 @@ const Incidents: React.FC = () => {
               {selectedIncident.title}
             </h3>
 
-            <p style={{ margin: '0 0 20px', fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', lineHeight: 1.5 }}>
+            <p style={{ margin: '0 0 16px', fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', lineHeight: 1.5 }}>
               {selectedIncident.description}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 24 }}>
+            {/* ─── AI RESOLUTION BRIEF (PROGRESSIVE DISCLOSURE FOR AI-ASSISTED INCIDENTS) ─── */}
+            {selectedIncident.resolutionBy === 'AI Assistant' && selectedIncident.aiResolutionBrief && (
+              <div
+                style={{
+                  margin: '0 0 20px',
+                  padding: 16,
+                  borderRadius: 10,
+                  background: 'linear-gradient(180deg, rgba(7, 74, 118, 0.04) 0%, rgba(7, 74, 118, 0.01) 100%)',
+                  border: '1px solid rgba(7, 74, 118, 0.2)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Cpu size={16} color="var(--ncgr-deep-blue, #074A76)" />
+                    <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--ncgr-deep-blue, #074A76)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      AI Resolution Brief
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '0.6875rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: 4,
+                      background: 'rgba(7, 74, 118, 0.12)',
+                      color: 'var(--ncgr-deep-blue, #074A76)',
+                    }}
+                  >
+                    Sovereign AI
+                  </span>
+                </div>
+
+                {/* Architecture Breadcrumb */}
+                <div
+                  style={{
+                    fontSize: '0.6875rem',
+                    color: 'var(--text-secondary, #475467)',
+                    background: 'var(--card-bg, #FFFFFF)',
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    border: '1px solid var(--border, #E4E7EC)',
+                    marginBottom: 12,
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <span style={{ fontWeight: 600 }}>Enterprise Telemetry Data</span>
+                  <span style={{ color: 'var(--text-tertiary, #98A2B3)' }}>→</span>
+                  <span style={{ fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)' }}>Sovereign AI Assistant</span>
+                  <span style={{ color: 'var(--text-tertiary, #98A2B3)' }}>→</span>
+                  <span style={{ fontWeight: 600 }}>Analysis & Recommendation</span>
+                  <span style={{ color: 'var(--text-tertiary, #98A2B3)' }}>→</span>
+                  <span style={{ fontWeight: 700, color: '#22A06B' }}>Human Validation</span>
+                </div>
+
+                {/* Structured Key Fields */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginBottom: 12 }}>
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>Resolution Method</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text, #101828)', marginTop: 2 }}>
+                      {selectedIncident.aiResolutionBrief.resolutionMethod}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>AI Capability</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--ncgr-deep-blue, #074A76)', marginTop: 2 }}>
+                      {selectedIncident.aiResolutionBrief.aiCapability}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>AI Foundation</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text, #101828)', marginTop: 2 }}>
+                      {selectedIncident.aiResolutionBrief.aiFoundation}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)' }}>
+                    <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>Human Validation</div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#22A06B', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle2 size={14} color="#22A06B" />
+                      {selectedIncident.aiResolutionBrief.humanValidation}
+                    </div>
+                  </div>
+                </div>
+
+                {/* What AI Identified */}
+                <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', marginBottom: 10 }}>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>What AI Identified</div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text, #101828)', lineHeight: 1.45, marginTop: 4 }}>
+                    {selectedIncident.aiResolutionBrief.whatAiIdentified}
+                  </div>
+                </div>
+
+                {/* Evidence Used */}
+                <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', marginBottom: 10 }}>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700, marginBottom: 4 }}>Evidence Used</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    {selectedIncident.aiResolutionBrief.evidenceUsed.map((ev, i) => (
+                      <div key={i} style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #475467)', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                        <span style={{ color: 'var(--ncgr-deep-blue, #074A76)', fontWeight: 700 }}>•</span>
+                        <span>{ev}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Contribution */}
+                <div style={{ padding: 10, borderRadius: 6, background: 'var(--card-bg, #FFFFFF)', border: '1px solid var(--border, #E4E7EC)', marginBottom: 10 }}>
+                  <div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase', fontWeight: 700 }}>AI Contribution</div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text, #101828)', lineHeight: 1.45, marginTop: 4 }}>
+                    {selectedIncident.aiResolutionBrief.aiContribution}
+                  </div>
+                </div>
+
+                {/* Resolution Outcome */}
+                <div style={{ padding: 10, borderRadius: 6, background: 'rgba(34, 160, 107, 0.08)', border: '1px solid rgba(34, 160, 107, 0.25)' }}>
+                  <div style={{ fontSize: '0.6875rem', color: '#22A06B', textTransform: 'uppercase', fontWeight: 700 }}>Resolution Outcome</div>
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text, #101828)', lineHeight: 1.45, marginTop: 4 }}>
+                    {selectedIncident.aiResolutionBrief.resolutionOutcome}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Standard Incident Metadata Details */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               <div style={{ padding: 12, borderRadius: 8, background: 'var(--bg-secondary, #F7F8FA)' }}>
                 <strong style={{ fontSize: '0.75rem', color: 'var(--text-tertiary, #98A2B3)', textTransform: 'uppercase' }}>Business Impact</strong>
                 <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#DE350B', marginTop: 2 }}>{selectedIncident.businessImpact}</div>

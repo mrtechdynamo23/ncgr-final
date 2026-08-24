@@ -1,6 +1,8 @@
 import React from 'react';
 import { issuesAndActions, type IssueActionRecord } from '../../data/programs';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { PROGRAM_MGMT_SIBLINGS } from './ProgramManagementLandingPage';
 
 const IssuesAndActionsPage: React.FC = () => {
   const criticalCount = issuesAndActions.filter(i => i.priority === 'Critical').length;
@@ -121,15 +123,13 @@ const IssuesAndActionsPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Program Issues & Remediation Actions
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Escalated operational roadblocks, corrective action items, assignment accountability, and target closure dates
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Program Management"
+        modulePath="/program-management"
+        pageTitle="Issues & Actions"
+        siblingPages={PROGRAM_MGMT_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { masterApplications, type ApplicationRecord } from '../../data/master-applications';
 import { ApplicationDetailModal } from '../../components/common/ApplicationDetailModal';
 import DataTable, { type ColumnDef, type FilterDef } from '../../components/common/DataTable';
+import SubPageHeader from '../../components/navigation/SubPageHeader';
+import { APPLICATION_SERVICES_SIBLINGS } from './ApplicationServicesLandingPage';
 
 const ApplicationHealthPage: React.FC = () => {
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
@@ -147,15 +149,13 @@ const ApplicationHealthPage: React.FC = () => {
 
   return (
     <div className="page-container" style={{ paddingBottom: 40 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text, #101828)', margin: '0 0 4px' }}>
-          Application Services & Health Portfolio
-        </h1>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #475467)', margin: 0 }}>
-          Central portfolio of 48 managed applications: real-time availability, incident telemetry, release status, and technical owners
-        </p>
-      </div>
+      {/* Sub-Page Header with Breadcrumb and Sibling Navigation */}
+      <SubPageHeader
+        moduleTitle="Application Services"
+        modulePath="/applications"
+        pageTitle="Application Health Portfolio"
+        siblingPages={APPLICATION_SERVICES_SIBLINGS}
+      />
 
       {/* KPI Cards Strip */}
       <div
