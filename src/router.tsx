@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createHashRouter, Navigate } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 import CommandCentre from './pages/CommandCentre';
 import { RequireAuth } from './components/auth/RequireAuth';
@@ -104,7 +104,7 @@ import ExecutiveReportView from './pages/reporting/ExecutiveReportView';
 // ─── Landing Page (Premium Entry Experience) ──────────────────
 import LandingPage from './pages/LandingPage';
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/login',
     element: <LoginPage />,
