@@ -172,12 +172,14 @@ const CommandCentre: React.FC = () => {
         >
           <div
             className="kpi-card kpi-entrance"
+            onClick={() => navigate('/applications/health')}
             style={{
               padding: 16,
               borderRadius: 12,
               background: 'var(--card-bg, #FFFFFF)',
               border: '1px solid var(--border, #E4E7EC)',
               borderTop: '3px solid #22A06B',
+              cursor: 'pointer',
               animationDelay: '0ms',
             }}
           >
@@ -303,12 +305,14 @@ const CommandCentre: React.FC = () => {
         >
           <div
             className="kpi-card kpi-entrance"
+            onClick={() => navigate('/command-center/service-desk')}
             style={{
               padding: 16,
               borderRadius: 12,
               background: 'var(--card-bg, #FFFFFF)',
               border: '1px solid var(--border, #E4E7EC)',
               borderTop: '3px solid #1FBBB0',
+              cursor: 'pointer',
               animationDelay: '120ms',
             }}
           >
@@ -845,7 +849,7 @@ const CommandCentre: React.FC = () => {
                 </h4>
               </div>
               <button
-                onClick={() => alert('WSR Week 32 Report Exported Successfully')}
+                onClick={() => navigate('/reports/wsr')}
                 style={{
                   marginTop: 12,
                   padding: '6px 12px',
@@ -858,7 +862,7 @@ const CommandCentre: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Download Report
+                Open WSR Report
               </button>
             </div>
           </TileHoverTooltip>
@@ -890,7 +894,7 @@ const CommandCentre: React.FC = () => {
                 </h4>
               </div>
               <button
-                onClick={() => alert('MSR July 2026 Report Exported Successfully')}
+                onClick={() => navigate('/reports/msr')}
                 style={{
                   marginTop: 12,
                   padding: '6px 12px',
@@ -903,7 +907,7 @@ const CommandCentre: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Download Report
+                Open MSR Report
               </button>
             </div>
           </TileHoverTooltip>
@@ -935,7 +939,7 @@ const CommandCentre: React.FC = () => {
                 </h4>
               </div>
               <button
-                onClick={() => alert('Executive Leadership Brief Exported Successfully')}
+                onClick={() => navigate('/reports/executive')}
                 style={{
                   marginTop: 12,
                   padding: '6px 12px',
@@ -948,7 +952,7 @@ const CommandCentre: React.FC = () => {
                   cursor: 'pointer',
                 }}
               >
-                Download Report
+                Open Executive Brief
               </button>
             </div>
           </TileHoverTooltip>
